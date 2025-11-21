@@ -40,10 +40,6 @@ const config: SiteConfig = {
       name: 'Posts',
       url: '/posts',
     },
-    {
-      name: 'Tags',
-      url: '/tags',
-    },
   ],
   // The theming configuration for the site.
   themes: {
