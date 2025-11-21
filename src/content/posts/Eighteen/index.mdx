@@ -6,6 +6,9 @@ toc: true
 tags: ['BloodyAD', 'BadSuccessor', 'dMSA', 'mssql', 'Werkzeug', 'Ligolo', 'port-forwarding']
 ---
 
+import PasswordProtect from "~/components/PasswordProtect.client";
+
+
 ---
 ```
 Scope:
@@ -53,6 +56,8 @@ PORT     STATE SERVICE  REASON  VERSION
 |_http-title: Not Found
 Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
+
+<PasswordProtect client:load>
 
 I tried the creds for `winrm` but they didn't work, let's try them for port `80` instead.
 
@@ -402,3 +407,4 @@ impacket-psexec -k -no-pass 'eighteen.htb/hacker3$@dc01.eighteen.htb'
 ![](attachments/ba372a1e579db82bc1a6f8226d81c388.png)
 
 ---
+</PasswordProtect>

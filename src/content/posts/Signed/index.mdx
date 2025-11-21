@@ -6,6 +6,9 @@ toc: true
 tags: ["mssql"]
 ---
 
+import PasswordProtect from "~/components/PasswordProtect.client";
+
+
 ```
 Scope:
 10.10.11.90
@@ -47,6 +50,8 @@ PORT     STATE SERVICE  REASON  VERSION
 Host script results:
 |_clock-skew: mean: 0s, deviation: 0s, median: 0s
 ```
+
+<PasswordProtect client:load>
 
 ## 1433/TCP - MSSQL
 
@@ -337,3 +342,5 @@ While this didn't work, the following did:
 ![](attachments/6f081466f4897451d889ddca9cdd4bc9.png)
 
 ---
+
+</PasswordProtect>

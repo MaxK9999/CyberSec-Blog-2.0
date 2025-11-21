@@ -6,6 +6,9 @@ toc: true
 tags: ["ADCS", "ESC3", "ShadowCredentialsAttack", "certipy-ad", "LDAP-Injection", "kerbrute", "BloodyAD", "dotnet", "scripting", "LFI"]
 ---
 
+import PasswordProtect from "~/components/PasswordProtect.client";
+
+
 ```
 Scope:
 10.10.11.91
@@ -75,6 +78,8 @@ Host script results:
 |   3:1:1: 
 |_    Message signing enabled and required
 ```
+
+<PasswordProtect client:load>
 
 ## 88/TCP - Kerberos
 ### mutating wordlist
@@ -900,3 +905,5 @@ After exporting the ticket we can log in, smooth sailing.
 ![](attachments/f9208f81dc6ba1818e495fb493f66136.png)
 
 ---
+
+</PasswordProtect>

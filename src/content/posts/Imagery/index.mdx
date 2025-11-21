@@ -4,7 +4,10 @@ published: 2025-11-20
 draft: false
 toc: true
 tags: ["XSS", "LFI", "command-injection", "pyAesCrypt", "SUID", "cron"]
+protected: true
 ---
+
+import PasswordProtect from "~/components/PasswordProtect.client";
 
 ```
 Scope:
@@ -33,6 +36,8 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 We notice 2 `python` webservers running as well as a `ssh` port.
+
+<PasswordProtect client:load>
 
 I quickly check out both to see the difference:
 
@@ -435,3 +440,5 @@ After waiting for a short while:
 ![](attachments/8491d93af1e575a6a7baf2b5fa037b9e.png)
 
 ---
+
+</PasswordProtect>

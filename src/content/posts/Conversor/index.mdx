@@ -6,6 +6,8 @@ toc: true
 tags: ["xslt-injection", "needrestart", "xml"]
 ---
 
+import PasswordProtect from "~/components/PasswordProtect.client";
+
 ```
 Scope:
 10.10.11.92
@@ -27,6 +29,8 @@ PORT   STATE SERVICE REASON  VERSION
 |_http-server-header: Apache/2.4.52 (Ubuntu)
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
+
+<PasswordProtect client:load>
 
 ## 80/TCP - HTTP
 
@@ -304,3 +308,5 @@ sudo /usr/sbin/needrestart -c root.sh
 ![](attachments/b60895e06924cca63e43c5cc06c5594c.png)
 
 ---
+
+</PasswordProtect>
