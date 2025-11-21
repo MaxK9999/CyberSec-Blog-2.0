@@ -1,12 +1,10 @@
 ---
 title: 'HTB-Planning'
-published: 2025-09-18
+published: 2025-10-07
 draft: false
 toc: true
 ---
-**Start 17:50 10-07-2025**
 
----
 ```
 Scope:
 10.10.11.68
@@ -14,6 +12,7 @@ Scope:
 Creds:
 admin / 0D5oT70Fq13EvB5r
 ```
+
 # Recon
 ## Nmap
 
@@ -156,9 +155,3 @@ I start a listener and click on **Run now**:
 ![](attachments/87e994d8548453d0b9086a3178120d0b.png)
 
 ---
-
-**Finished 20:04 10-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-

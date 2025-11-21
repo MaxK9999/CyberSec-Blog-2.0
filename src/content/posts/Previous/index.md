@@ -1,16 +1,15 @@
 ---
 title: 'HTB-Previous'
-published: 2025-09-18
+published: 2025-09-17
 draft: false
 toc: true
 ---
-**Start 09:58 17-09-2025**
 
----
 ```
 Scope:
 10.10.11.83
 ```
+
 # Recon
 ## Nmap
 
@@ -229,7 +228,3 @@ Now all that's left is to `/bin/bash -p`:
 ![](attachments/0dd94ca00be8bec14b80a198c87d62ca.png)
 
 ---
-
-**Finished 12:45 17-09-2025**
-
-[^Links]: [[Hack The Box]]

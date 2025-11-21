@@ -1,12 +1,11 @@
 ---
 title: 'HTB-RustyKey'
-published: 2025-09-18
+published: 2025-07-03
 draft: false
 toc: true
+tag: ["pass-the-ticket", "pass-the-key", "timeroasting", "BloodyAD", "BloodHound", "AddSelf", "forcechangepassword", "COM-hijack", "RBCD"]
 ---
-**Start 21:13 03-07-2025**
 
----
 ```
 Scope:
 10.10.11.75
@@ -14,6 +13,7 @@ Scope:
 Creds:
 rr.parker / 8#t5HE8L!W3A
 ```
+
 # Recon
 ## Nmap
 
@@ -477,9 +477,3 @@ I can now export it and get access with it.
 ![](attachments/3c9c48cc4111c93c4b672d923f2b4541.png)
 
 ---
-
-**Finished 11:17 04-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#pass-the-ticket #pass-the-key #timeroasting #BloodyAD #BloodHound #AddSelf #forcechangepassword #COM-hijack #RBCD 

@@ -1,12 +1,11 @@
 ---
 title: 'HTB-Outbound'
-published: 2025-09-18
+published: 2025-07-14
 draft: false
 toc: true
+tags: ["CVE-2025-49113", "CVE-2025-27591"]
 ---
-**Start 08:50 14-07-2025**
 
----
 ```
 Scope:
 10.10.11.77
@@ -14,11 +13,12 @@ Scope:
 Creds:
 tyler / LhKL1o9Nm3X2
 ```
+
 # Recon
 ## Nmap
 
 ```bash
-sudo nmap -sC -sV -sT -vvvv -p- -T5 --min-rate=5000 -Pn outbound.htb                                                              [0]
+sudo nmap -sC -sV -sT -vvvv -p- -T5 --min-rate=5000 -Pn outbound.htb
 
 PORT   STATE SERVICE REASON  VERSION
 22/tcp open  ssh     syn-ack OpenSSH 9.6p1 Ubuntu 3ubuntu13.12 (Ubuntu Linux; protocol 2.0)
@@ -177,10 +177,4 @@ Super duper easy!
 
 ![](attachments/30518a9b739424aa84d02cce3db75e7d.png)
 
----
-
-**Finished 23:15 14-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#CVE-2025-49113 #CVE-2025-27591 
+---=

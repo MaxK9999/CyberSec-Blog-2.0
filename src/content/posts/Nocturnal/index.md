@@ -1,16 +1,16 @@
 ---
 title: 'HTB-Nocturnal'
-published: 2025-09-18
+published: 2025-07-10
 draft: false
 toc: true
+tags: ['command-injection', 'ffuf', 'port-forwarding']
 ---
-**Start 20:15 10-07-2025**
 
----
 ```
 Scope:
 10.10.11.64
 ```
+
 # Recon
 ## Nmap
 
@@ -229,9 +229,3 @@ I used the following poc:
 ![](attachments/4d3749f9c2a23012da06e3190c15475d.png)
 
 ---
-
-**Finished 10-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#command-injection #ffuf #port-forwarding 

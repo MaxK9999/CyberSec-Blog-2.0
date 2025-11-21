@@ -1,16 +1,16 @@
 ---
 title: 'HTB-MetaTwo'
-published: 2025-09-18
+published: 2025-09-22
 draft: false
 toc: true
+tags: ["XXE", "Wordpress", "CVE-2022-0739", "CVE-2021-29447", "gpg2john", "passpie"]
 ---
-**Start 08:39 22-09-2025**
 
----
 ```
 Scope:
 10.10.11.186
 ```
+
 # Recon
 ## Nmap
 
@@ -342,9 +342,3 @@ We can now use these creds to log in as *root*:
 ![](attachments/01ae70abedc18da73f05cf2e391ff539.png)
 
 ---
-
-**Finished 11:06 22-09-2025**
-
-[^Links]: [[Hack The Box]]
-
-#XXE #Wordpress #CVE-2022-0739 #CVE-2021-29447 #gpg2john #passpie 

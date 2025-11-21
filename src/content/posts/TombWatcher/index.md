@@ -1,12 +1,11 @@
 ---
 title: 'HTB-TombWatcher'
-published: 2025-09-18
+published: 2025-06-26
 draft: false
 toc: true
+tags: ["ADCS", "kerberoasting", "forcechangepassword", "BloodHound", "ACL", "BloodyAD", "ESC15", "certipy-ad"]
 ---
-**Start 08:10 26-06-2025**
 
----
 ```
 Scope:
 10.10.11.72
@@ -14,6 +13,7 @@ Scope:
 Creds:
 henry / H3nry_987TGV!
 ```
+
 # Recon
 ## Nmap
 
@@ -351,9 +351,3 @@ Now we can go ahead and use the newly set creds to log into `evil-winrm` as *Adm
 ![](attachments/d73efcac98bffd48427d613d21b199ab.png)
 
 ---
-
-**Finished 11:03 26-06-2025**
-
-[^Links]: [[Hack The Box]]
-
-#ADCS #kerberoasting #forcechangepassword #BloodHound #ACL #BloodyAD #ESC15 #certipy-ad 

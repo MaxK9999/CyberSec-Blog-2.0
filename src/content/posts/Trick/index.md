@@ -1,16 +1,16 @@
 ---
 title: 'HTB-Trick'
-published: 2025-09-18
+published: 2025-09-25
 draft: false
 toc: true
+tags: ["fail2ban", "LFI", "SQLi", "sqlmap", "ffuf"]
 ---
-**Start 09:30 25-09-2025**
 
----
 ```
 Scope:
 10.10.11.166
 ```
+
 # Recon
 ## Nmap
 
@@ -196,9 +196,3 @@ After waiting for roughly 100 seconds we become *root*:
 ![](attachments/1180093833ed71bcdba796118467e570.png)
 
 ---
-
-**Finished 10:27 25-09-2025**
-
-[^Links]: [[Hack The Box]]
-
-#fail2ban #LFI #SQLi #sqlmap #ffuf 

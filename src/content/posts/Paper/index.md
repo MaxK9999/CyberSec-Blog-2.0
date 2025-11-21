@@ -1,17 +1,16 @@
 ---
 title: 'HTB-Paper'
-published: 2025-09-18
+published: 2025-04-22
 draft: false
 toc: true
+tags: ["LFI", "polkit", "OSCP Prep"]
 ---
-**Start 20:30 22-04-2025**
 
----
 ```
 10.10.11.143
 ```
-# Recon
 
+# Recon
 ## Nmap
 
 ```bash
@@ -169,9 +168,3 @@ Hell yeah.
 ![](attachments/1e6bc93647697874854f7edf6a726b62.png)
 
 ---
-
-**Finished 22:07 22-04-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#LFI #polkit 

@@ -1,12 +1,11 @@
 ---
 title: 'HTB-Voleur'
-published: 2025-09-18
+published: 2025-07-06
 draft: false
 toc: true
+tags: ["pass-the-key", "pass-the-ticket", "BloodHound", "ActiveDirectory", "kerberoasting", "dpapi"]
 ---
-**Start 16:13 06-07-2025**
 
----
 ```
 Scope:
 10.10.11.76
@@ -14,6 +13,7 @@ Scope:
 Creds:
 ryan.naylor / HollowOct31Nyt
 ```
+
 # Recon
 ## Nmap
 
@@ -358,9 +358,3 @@ I can now finally get the *Administrator* ticket and log in:
 ![](attachments/5f551d297e7b16ce7edf00cfcbca8876.png)
 
 ---
-
-**Finished 16:45 10-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#pass-the-key #pass-the-ticket #BloodHound #ActiveDirectory #kerberoasting #dpapi 

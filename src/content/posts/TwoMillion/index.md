@@ -1,16 +1,16 @@
 ---
 title: 'HTB-TwoMillion'
-published: 2025-09-18
+published: 2025-10-25
 draft: false
 toc: true
+tags: ['JavaScriptDeobfuscation', 'API-Attacks', 'command-injection', 'CVE-2023-0386']
 ---
-**Start 10:11 25-10-2025**
 
----
 ```
 Scope:
 10.10.11.221
 ```
+
 # Recon
 ## Nmap
 
@@ -286,9 +286,3 @@ We can then easily exploit it:
 ![](attachments/ae293f6de4dfc2d1759d19b438545fe3.png)
 
 ---
-
-**Finished 11:58 25-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-#JavaScriptDeobfuscation #API-Attacks #command-injection #CVE-2023-0386 

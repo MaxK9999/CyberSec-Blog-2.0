@@ -1,18 +1,17 @@
 ---
 title: 'HTB-SolidState'
-published: 2025-09-18
+published: 2025-03-16
 draft: false
 toc: true
+tags: ["pop3", "james-admin", "pspy", "OSCP Prep"]
 ---
-**Start 08:06 16-03-2025**
 
----
 ```
 Scope:
 10.10.10.51
 ```
-# Recon
 
+# Recon
 ## Nmap
 
 ```bash
@@ -216,9 +215,3 @@ Hell yeah.
 ![](attachments/fefff3c4abb9e78fdeff03f92d34ca61.png)
 
 ---
-
-**Finished 09:39 16-03-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#pop3 #james-admin #pspy 

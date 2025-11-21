@@ -1,18 +1,17 @@
 ---
 title: 'HTB-Nineveh'
-published: 2025-09-18
+published: 2025-04-23
 draft: false
 toc: true
+tags: ["LFI", "hydra", "pspy", "OSCP Prep"]
 ---
-**Start 07:55 23-04-2025**
 
----
 ```
 Scope:
 10.10.10.43
 ```
-# Recon
 
+# Recon
 ## Nmap
 
 ```bash
@@ -246,9 +245,3 @@ Now it's sit and wait for the shell to fire.
 ![](attachments/4773f6a9ec920d5e0b628b2e2cea189e.png)
 
 ---
-
-**Finished 10:55 23-04-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]] 
-
-#LFI #hydra #pspy 

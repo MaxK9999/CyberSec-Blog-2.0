@@ -3,7 +3,7 @@ title: 'HTB-Hercules'
 published: 2025-11-19
 draft: false
 toc: true
-tags: ["ADCS", "ESC3", "ShadowCertificate", "certipy-ad", "LDAP-Injection", "kerbrute", "BloodyAD", "dotnet", "scripting", "LFI"]
+tags: ["ADCS", "ESC3", "ShadowCredentialsAttack", "certipy-ad", "LDAP-Injection", "kerbrute", "BloodyAD", "dotnet", "scripting", "LFI"]
 ---
 
 ```

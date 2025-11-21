@@ -1,20 +1,18 @@
 ---
 title: 'HTB-Monitored'
-published: 2025-09-18
+published: 2025-04-19
 draft: false
 toc: true
+tags: ["SQLi", "burpsuite", "Repeater", "Intruder", "NagiosXI", "Symlinks", "OSCP Prep"]
 ---
-**Start 14:14 19-04-2025**
 
----
 ```
 Scope:
 10.10.11.248
 ```
+
 # Recon
-
 ## Nmap
-
 ### TCP
 
 ```bash
@@ -435,9 +433,3 @@ Just like that we've got access as *root*.
 ![](attachments/4a80b4190501fd3203dcd3a30913662e.png)
 
 ---
-
-**Finished 21:25 19-04-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#SQLi #burpsuite #Repeater #Intruder #NagiosXI #Symlinks 

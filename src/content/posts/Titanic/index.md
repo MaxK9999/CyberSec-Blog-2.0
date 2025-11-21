@@ -1,18 +1,17 @@
 ---
 title: 'HTB-Titanic'
-published: 2025-09-18
+published: 2025-04-21
 draft: false
 toc: true
+tags: ["ImageMagick", "LFI", "SQLite3", "Burpsuite", "priv-esc"]
 ---
-**Start 08:51 21-04-2025**
 
----
 ```
 Scope:
 10.10.11.55
 ```
-# Recon
 
+# Recon
 ## Nmap
 
 ```bash
@@ -265,9 +264,3 @@ Overall *MEDIUM* difficulty for me at this stage, definitely needed some help wi
 :::
 
 ---
-
-**Finished 11:21 21-04-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#ImageMagick #LFI #SQLite3 #Burpsuite #priv-esc 

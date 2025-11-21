@@ -1,16 +1,16 @@
 ---
 title: 'HTB-Shoppy'
-published: 2025-09-18
+published: 2025-09-25
 draft: false
 toc: true
+tags: ['NoSQL', 'Intruder', 'ffuf', 'strings', 'docker']
 ---
-**Start 10:33 25-09-2025**
 
----
 ```
 Scope:
 10.10.11.180
 ```
+
 # Recon
 ## Nmap
 
@@ -249,9 +249,3 @@ This is an amazing position to be in since we can easily exploit the binary usin
 ![](attachments/27cdd06b869fa45a22ce4f5ff9a270ab.png)
 
 ---
-
-**Finished 12:05 25-09-2025**
-
-[^Links]: [[Hack The Box]]
-
-#NoSQL #Intruder #ffuf #strings #docker 

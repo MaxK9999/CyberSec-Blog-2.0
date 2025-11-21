@@ -1,12 +1,11 @@
 ---
 title: 'HTB-Puppy'
-published: 2025-09-18
+published: 2025-07-15
 draft: false
 toc: true
+tags: ["impacket", "dpapi", "ldapsearch", "ldapmodify", "keepass", "BloodyAD", "BloodHound"]
 ---
-**Start 08:48 15-07-2025**
 
----
 ```
 Scope:
 10.10.11.70
@@ -14,6 +13,7 @@ Scope:
 Creds:
 levi.james / KingofAkron2025!
 ```
+
 # Recon
 ## Nmap
 
@@ -286,9 +286,3 @@ impacket-dpapi credential -f C8D69EBE9A43E9DEBF6B5FBD48B521B9  -key 0xd9a570722f
 ![](attachments/5239013f4c3ad7549129b575a7fa6468.png)
 
 ---
-
-**Finished 10:15 15-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#impacket #dpapi #ldapsearch #ldapmodify #keepass #BloodyAD #BloodHound 

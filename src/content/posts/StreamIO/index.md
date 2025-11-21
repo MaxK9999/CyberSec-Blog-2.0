@@ -1,18 +1,17 @@
 ---
 title: 'HTB-StreamIO'
-published: 2025-09-18
+published: 2025-03-26
 draft: false
 toc: true
+tags: ["SQLi", "wfuzz", "RFI", "BloodHound", "OSCP Prep"]
 ---
-**Start 14:46 26-03-2025**
 
----
 ```
 Scope:
 10.10.11.158
 ```
-# Recon
 
+# Recon
 ## Nmap
 
 ```bash
@@ -480,9 +479,3 @@ EZ PZ.
 ![](attachments/5ff882755579d67609bf985d2795401a.png)
 
 ---
-
-**Finished 12:33 19-04-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#SQLi #wfuzz #RFI #BloodHound 

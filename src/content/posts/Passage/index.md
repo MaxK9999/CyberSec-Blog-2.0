@@ -1,16 +1,16 @@
 ---
 title: 'HTB-Passage'
-published: 2025-09-18
+published: 2025-10-28
 draft: false
 toc: true
+tags: ["CVE-2019-11447", "USBCreator", "D-Bus"]
 ---
-**Start 09:35 28-10-2025**
 
----
 ```
 Scope:
 10.10.10.206
 ```
+
 # Recon
 ## Nmap
 
@@ -204,9 +204,3 @@ Now we can abuse the fetched `id_rsa` to log in as *root*.
 ![](attachments/c9cfd16c48652e893f370d337a333c85.png)
 
 ---
-
-**Finished 11:00 28-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-#CVE-2019-11447 #USBCreator #D-Bus 

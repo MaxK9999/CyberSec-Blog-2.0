@@ -1,16 +1,16 @@
 ---
 title: 'HTB-Usage'
-published: 2025-09-18
+published: 2025-10-27
 draft: false
 toc: true
+tags: ["SQLi", "sqlmap", "wildcard"]
 ---
-**Start 09:49 27-10-2025**
 
----
 ```
 Scope:
 10.10.11.18
 ```
+
 # Recon
 ## Nmap
 
@@ -249,10 +249,3 @@ We can copy the output and remove the `No more files` lines and log in via `ssh`
 ![](attachments/c2f03d2fe129810c2e5ad118aa177e45.png)
 
 ---
-
-**Finished 14:55 27-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-
-#SQLi #sqlmap #wildcard 
