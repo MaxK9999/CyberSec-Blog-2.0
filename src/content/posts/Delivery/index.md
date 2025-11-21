@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Delivery'
 published: 2025-09-16
 draft: false
@@ -99,8 +99,9 @@ Clicking on it I see this URL:
 
 ![](attachments/cbcde79cca6594b0987d96d3da02291e.png)
 
->[!note]
->It might be vulnerable to IDOR, SQLi or LFI in the best case.
+:::note
+It might be vulnerable to IDOR, SQLi or LFI in the best case.
+:::
 
 I registered for a sample account and checked `burp`:
 
@@ -198,10 +199,11 @@ It was simply a variation on the cleartext password that we've already found pre
 
 ![](attachments/042bb1538a4b9a1f4cbb066fc34d9a49.png)
 
->[!note]
->![](attachments/0f0bbd6459104ee9dd65b3f71182e836.png)
->
->Here is the [link to the post](https://medium.com/intigriti/how-i-hacked-hundreds-of-companies-through-their-helpdesk-b7680ddc2d4c)
+:::note
+![](attachments/0f0bbd6459104ee9dd65b3f71182e836.png)
+
+Here is the [link to the post](https://medium.com/intigriti/how-i-hacked-hundreds-of-companies-through-their-helpdesk-b7680ddc2d4c)
+:::
 
 ![](attachments/893eefc5e98562d5b1038b118ee4bfdb.png)
 

@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-SolidState'
 published: 2025-09-18
 draft: false
@@ -117,8 +117,9 @@ However when we check the service via `nc` we now see the following:
 
 This means the exploit tried to add a new user.
 
->[!note]
->I also tried the older version but that didnt work either for RCE.
+:::note
+I also tried the older version but that didnt work either for RCE.
+:::
 
 What we can do instead is just change passwords of the users since we're an admin account.
 

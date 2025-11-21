@@ -1,18 +1,18 @@
-﻿---
+---
 title: 'HTB-FriendZone'
-published: 2025-09-18
+published: 2025-03-26
 draft: false
 toc: true
+tags: ["DNS", "smb", "pspy", "OSCP Prep"]
 ---
-**Start 08:37 26-03-2025**
 
 ---
 ```
 Scope:
 10.10.10.123
 ```
-# Recon
 
+# Recon
 ## Nmap
 
 ```bash
@@ -417,9 +417,3 @@ Now it's time to start our listener and wait.
 ![](attachments/95cca11b3fd2fe81e5a6478219273393.png)
 
 ---
-
-**Finished 11:18 26-03-2025**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#DNS #smb #pspy 

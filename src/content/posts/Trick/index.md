@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Trick'
 published: 2025-09-18
 draft: false

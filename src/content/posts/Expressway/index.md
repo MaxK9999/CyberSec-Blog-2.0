@@ -1,16 +1,18 @@
-﻿---
+---
 title: 'HTB-Expressway'
-published: 2025-09-18
+published: 2025-09-21
 draft: false
 toc: true
+tags: ['ike', 'isakmp', 'CVE-2025-32463']
 ---
-**Start 09:02 21-09-2025**
 
 ---
+
 ```
 Scope:
 10.10.11.87
 ```
+
 # Recon
 ## Nmap
 
@@ -134,9 +136,3 @@ EZ PZ *root*.
 ![](attachments/05e8ae1f4fcbd04c9eb8219858ab8db9.png)
 
 ---
-
-**Finished 09:56 21-09-2025**
-
-[^Links]: [[Hack The Box]]
-
-#ike #isakmp #CVE-2025-32463 

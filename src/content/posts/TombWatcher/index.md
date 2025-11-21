@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-TombWatcher'
 published: 2025-09-18
 draft: false
@@ -123,8 +123,9 @@ john
 
 ![](attachments/61658f9eba04ad5833dbb486a69568a8.png)
 
->[!note]
->This means we can get easy access as *alfred* by using the `targetedKerberoast.py` script and cracking the hash.
+:::note
+This means we can get easy access as *alfred* by using the `targetedKerberoast.py` script and cracking the hash.
+:::
 
 ### Targeted Kerberoast
 
@@ -159,8 +160,9 @@ basketball
 
 One more set of creds to add to our spraying list.
 
->[!note]
->this yet again yielded no interesting entry point.
+:::note
+this yet again yielded no interesting entry point.
+:::
 
 Time to check `bloodhound` again:
 
@@ -218,9 +220,10 @@ bloodyAD -u 'ansible_dev$' -p ':4b21348ca4a9edff9689cdf75cbda439' -d 'tombwatche
 
 Now we can log into `winrm` with *sam*.
 
->[!fail]
->....or rather not?
->
+:::fail
+....or rather not?
+
+:::
 
 ![](attachments/f0c43b574e2945d65dbea0e77057e809.png)
 
@@ -318,8 +321,9 @@ This gives a lot of info, but the most important part is in the bottom:
 
 According to the script the target is vulnerable to **ESC15**.
 
->[!note]
->More about this topic [here](https://abrictosecurity.com/esc15-the-evolution-of-adcs-attacks/)
+:::note
+More about this topic [here](https://abrictosecurity.com/esc15-the-evolution-of-adcs-attacks/)
+:::
 
 ## ESC15 Abuse
 ### Forging Administrator Cert 

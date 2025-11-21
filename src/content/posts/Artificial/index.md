@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Artificial'
 published: 2025-06-25
 draft: false
@@ -129,8 +129,9 @@ Time to check out the `/opt` directory.
 
 ![](attachments/b46ad59db252f1c0bea8669ace22ece7.png)
 
->[!note]
->This led to a whole lot of nothing, instead I went on to enumerate where i landed in the first place
+:::note
+This led to a whole lot of nothing, instead I went on to enumerate where i landed in the first place
+:::
 
 ### SQLite DB
 
@@ -187,9 +188,10 @@ backrest_root
 
 EZ PZ.
 
->[!fail]
->Not so fast, unfortunately this password did not give us *root* access:
->![](attachments/eb9bc664b355ae9316a7ecd8c849ca1c.png)
+:::fail
+Not so fast, unfortunately this password did not give us *root* access:
+![](attachments/eb9bc664b355ae9316a7ecd8c849ca1c.png)
+:::
 
 ## Port Forwarding 
 

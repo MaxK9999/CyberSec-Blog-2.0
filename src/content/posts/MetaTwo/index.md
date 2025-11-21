@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-MetaTwo'
 published: 2025-09-18
 draft: false
@@ -50,8 +50,9 @@ I then headed over to `/wp-admin` to try and login using default creds:
 
 This tells us that the user *admin* does exist. 
 
->[!note]
->We can possibly brute-force it in case `xmlrpc` is enabled
+:::note
+We can possibly brute-force it in case `xmlrpc` is enabled
+:::
 
 ### wpscan
 
@@ -61,8 +62,9 @@ Running `wpscan` we notice that it's in fact enabled meeaning we can try to thro
 
 ![](attachments/d16ca75dddc58b17dee0ed1431c949af.png)
 
->[!note]
->The `twentytwentyone` theme is vulnerable, once we're inside we can get a webshell/reverse shell by modifying the `404.php` page in order to achieve the desired results.
+:::note
+The `twentytwentyone` theme is vulnerable, once we're inside we can get a webshell/reverse shell by modifying the `404.php` page in order to achieve the desired results.
+:::
 
 ### brute forcing xmlrpc - FAIL
 
@@ -215,8 +217,9 @@ echo zlib_decode(base64_decode('jVRNj5swEL3nV3BspUSGkGSDj22lXjaVuum9MuAFusamNiSh
 
 ![](attachments/ebc88d8f78587abd8f7dc390a1a60682.png)
 
->[!tldr]
->Through the **XXE** vulnerability we were able to retrieve the `/etc/passwd` file and find the *jnelson* user.
+:::tldr
+Through the **XXE** vulnerability we were able to retrieve the `/etc/passwd` file and find the *jnelson* user.
+:::
 
 I then tried to retrieve the `id_rsa` from this user:
 
@@ -287,10 +290,11 @@ Checking the `root.pass` yields us a a PGP encrypted message.
 
 ![](attachments/de794b5addd273342917e21f8c94ca32.png)
 
->[!question]
->So what is **passpie**? 
->
->![](attachments/28d24320965dfc59578304dc363cccc4.png)
+:::question
+So what is **passpie**? 
+
+![](attachments/28d24320965dfc59578304dc363cccc4.png)
+:::
 
 Simply using the `passpie` command outputs `*****`.
 

@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-RustyKey'
 published: 2025-09-18
 draft: false
@@ -116,8 +116,9 @@ Now I can start graphing it out.
 
 ![](attachments/b7fad91e0fe4c29ffede7535250f6ac2.png)
 
->[!note]
->I couldn't really find anything useful for now, but I will definitely come back here
+:::note
+I couldn't really find anything useful for now, but I will definitely come back here
+:::
 
 ### User Enum
 
@@ -129,8 +130,9 @@ nxc ldap rustykey.htb -u users.txt -p passwords.txt --users -k
 
 ![](attachments/0e89d23671affadb925cbb4a79329d2e.png)
 
->[!note]
->The *backupadmin* user stands out immediately, that might be our priv esc later on.
+:::note
+The *backupadmin* user stands out immediately, that might be our priv esc later on.
+:::
 
 I added all of the above for my users list.
 
@@ -160,8 +162,9 @@ In order to crack this I needed a beta module of `hashcat` which included mode `
 
 ![](attachments/7d0e842934979245c154d25f73b70328.png)
 
->[!note]
->I could easily find it [here](https://hashcat.net/beta/).
+:::note
+I could easily find it [here](https://hashcat.net/beta/).
+:::
 
 After unzipping the file I started cracking.
 
@@ -199,9 +202,10 @@ I tried it out using `bloodyAD` but got this error:
 
 ![](attachments/04d9fc9b10eb6f8c502121b840b1e05a.png)
 
->[!fail]
->On closer inspection it makes sense that it failed:
->Machine accounts **canâ€™t authenticate via NTLM directly** like regular user accounts _in most cases_â€”they are designed to use **Kerberos tickets** (machine authentication requires a valid TGT).
+:::fail
+On closer inspection it makes sense that it failed:
+Machine accounts **can’t authenticate via NTLM directly** like regular user accounts _in most cases_—they are designed to use **Kerberos tickets** (machine authentication requires a valid TGT).
+:::
 
 So, we need to request a TGT again.
 
@@ -250,9 +254,10 @@ bb.morgan
 password123!
 ```
 
->[!important]
->We now will have to get another `kerb` ticket in order to actually log in:
->![](attachments/9085e18175ee36f72654fe3216fb3e00.png)
+:::important
+We now will have to get another `kerb` ticket in order to actually log in:
+![](attachments/9085e18175ee36f72654fe3216fb3e00.png)
+:::
 
 Simply requesting the ticket does not work:
 
@@ -260,9 +265,10 @@ Simply requesting the ticket does not work:
 
 This might in fact be due to the constraints of the **PROTECTED OBJECTS** group. Let's remove our user from it.
 
->[!danger]
->Sometimes it trips out and you'll have to repeat old commands again:
->![](attachments/258a1db790a792d9b78048ccf5fbf369.png)
+:::danger
+Sometimes it trips out and you'll have to repeat old commands again:
+![](attachments/258a1db790a792d9b78048ccf5fbf369.png)
+:::
 
 After resending the `add groupMember` command I issued the `remove groupMember` command for the **PROTECTED OBJECTS** group:
 
@@ -303,9 +309,10 @@ Furthermore I find the following:
 
 ![](attachments/93201e015384b3ab2490d823a3602b01.png)
 
->[!note]
->Other than that my privs are absolutely dog tier:
->![](attachments/4bcbd2466dad986bb51ec75057e155fb.png)
+:::note
+Other than that my privs are absolutely dog tier:
+![](attachments/4bcbd2466dad986bb51ec75057e155fb.png)
+:::
 
 ![](attachments/25b5b3a86cefa01bb60e67472687d247.png)
 
@@ -366,29 +373,32 @@ I got a shell:
 
 ![](attachments/311b21d4dda6cf9d44e2dbbb4db28869.png)
 
->[!success]
->I successfully pivoted to *ee.reed*.
+:::success
+I successfully pivoted to *ee.reed*.
+:::
 
 I checked back on `bloodhound` and found that the way to get to *backupadmin* was by exploiting *mm.turner* first:
 
 ![](attachments/e851400522bf2295f52467a6890dae7a.png)
 
->[!note]
->I had to move laterally towards *mm.turner* first, my guess would be via the following methods.
+:::note
+I had to move laterally towards *mm.turner* first, my guess would be via the following methods.
+:::
 
 I focus in on this part that I found in the PDF.
 
 ![](attachments/3291bfe270b5ce9a439ad19ec609cc50.png)
 
->[!important]
->- COM objects for **ZIP utilities** (or compression tools) often register CLSIDs with the term "zip".
->- Many archiving tools (WinRAR, 7-Zip, built-in ZIP) register COM objects to integrate into context menus (right-click options like "Extract Here", "Compress", etc.).
->- If such registry keys are **writable by low-privileged users** (due to the "extended access"), an attacker can **redirect** the CLSID to load _malicious DLLs_ or _payloads_ insteadâ€”this is **COM Hijacking**.
+:::important
+- COM objects for **ZIP utilities** (or compression tools) often register CLSIDs with the term "zip".
+- Many archiving tools (WinRAR, 7-Zip, built-in ZIP) register COM objects to integrate into context menus (right-click options like "Extract Here", "Compress", etc.).
+- If such registry keys are **writable by low-privileged users** (due to the "extended access"), an attacker can **redirect** the CLSID to load _malicious DLLs_ or _payloads_ instead—this is **COM Hijacking**.
+:::
 
 If writable, attackers can:
 
 - Replace `InprocServer32` path to point to **malicious DLL**.
-- Trigger the vulnerable app or COM call â†’ DLL gets loaded as SYSTEM or elevated context.
+- Trigger the vulnerable app or COM call → DLL gets loaded as SYSTEM or elevated context.
 
 Result: **Privilege Escalation via COM Hijack**.
 
@@ -425,8 +435,9 @@ After craftig up the payload I can now upload it.
 reg add "HKLM\Software\Classes\CLSID\{23170F69-40C1-278A-1000-000100020000}\InprocServer32" /ve /d "C:\tools\hax2.dll" /f
 ```
 
->[!important]
->The `.dll` payload needs to be put in a location where *every* user has access to it! Otherwise it will not work.
+:::important
+The `.dll` payload needs to be put in a location where *every* user has access to it! Otherwise it will not work.
+:::
 
 ![](attachments/6266c8fe4afe5aeefc0a8d449f1e4cb5.png)
 

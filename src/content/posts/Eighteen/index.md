@@ -1,10 +1,10 @@
-﻿---
+---
 title: 'HTB-Eighteen'
-published: 2025-09-18
+published: 2025-11-17
 draft: false
 toc: true
+tags: ['BloodyAD', 'BadSuccessor', 'dMSA', 'mssql', 'Werkzeug', 'Ligolo', 'port-forwarding']
 ---
-**Start 10:53 17-11-2025**
 
 ---
 ```
@@ -15,6 +15,7 @@ Creds:
 kevin
 iNa2we6haRj2gaw!
 ```
+
 # Recon
 ## Nmap
 
@@ -73,8 +74,9 @@ I proceeded by logging in via `impacket-mssqlclient`:
 
 ![](attachments/a7255a87030ed9f03f5d0ed3afb652c3.png)
 
->[!important]
->Contrary to the `nxc` command, `mssqlclient` only worked while omitting the `-windows-auth` tag.
+:::important
+Contrary to the `nxc` command, `mssqlclient` only worked while omitting the `-windows-auth` tag.
+:::
 
 I wasn't able to enable the `xp_cmdshell` so it was time for some enumeration.
 
@@ -246,10 +248,11 @@ Once I had the port forward set up I tried some commands using `bloodyAD`:
 
 ![](attachments/7d7a6c0534d5b55201aea4756cb4f4b1.png)
 
->[!note]
->It was now able to reach the AD server (unlike previously), all that's left is to get the correct command down.
->
->![](attachments/d2f20022283f4cc0b1e8972bb3ed577c.png)
+:::note
+It was now able to reach the AD server (unlike previously), all that's left is to get the correct command down.
+
+![](attachments/d2f20022283f4cc0b1e8972bb3ed577c.png)
+:::
 
 I used [this cheatsheet](https://seriotonctf.github.io/BloodyAD-Cheatsheet/) to enumerate the target using various `bloodyAD` commands. One command showed me some interesting output:
 
@@ -284,8 +287,9 @@ New-MachineAccount -MachineAccount ATTACKER -Password (ConvertTo-SecureString 'P
 
 As the blog mentions:
 
->[!note]
->To achieve privilege escalation within the domain, it is necessary either to create aÂ **dMSA**Â account or to have write permissions on theÂ **msDS-ManagedAccountPrecededByLink**Â andÂ **msDS-DelegatedMSAState**Â attributes of an existingÂ **dMSA**Â account.
+:::note
+To achieve privilege escalation within the domain, it is necessary either to create a **dMSA** account or to have write permissions on the **msDS-ManagedAccountPrecededByLink** and **msDS-DelegatedMSAState** attributes of an existing **dMSA** account.
+:::
 
 Next up we'll use the following command:
 
@@ -341,8 +345,9 @@ $dMSA.Put("msDS-ManagedAccountPrecededByLink", "CN=Administrator,CN=Users,DC=eig
 $dMSA.SetInfo()
 ```
 
->[!note]
->During the creation of theÂ **dMSA**Â account, the attacker obtains the TGT ticket associated with the machine account they are using via theÂ **PrincipalsAllowedToRetrieveManagedPassword**Â configuration, making this machine account the preferred choice since it has the necessary permissions to read theÂ **dMSA**Â objectâ€™s password.
+:::note
+During the creation of the **dMSA** account, the attacker obtains the TGT ticket associated with the machine account they are using via the **PrincipalsAllowedToRetrieveManagedPassword** configuration, making this machine account the preferred choice since it has the necessary permissions to read the **dMSA** object’s password.
+:::
 
 ```powershell
 .\Rubeus.exe asktgt /user:ATTACKER$ /password:'P@ssword123' /enctype:aes256 /nowrap
@@ -397,9 +402,3 @@ impacket-psexec -k -no-pass 'eighteen.htb/hacker3$@dc01.eighteen.htb'
 ![](attachments/ba372a1e579db82bc1a6f8226d81c388.png)
 
 ---
-
-**Finished 14:48 18-11-2025**
-
-[^Links]: [[Hack The Box]]
-
-#BloodyAD #BadSuccessor #dMSA #mssql #Werkzeug #Ligolo #port-forwarding 

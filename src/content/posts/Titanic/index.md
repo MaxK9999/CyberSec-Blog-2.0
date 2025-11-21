@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Titanic'
 published: 2025-09-18
 draft: false
@@ -59,9 +59,10 @@ We test it using the standard `/etc/passwd` file:
 
 It seems to work! We found a user *developer* in here.
 
->[!success]
->For CTF purposes I then got the `user.txt` flag, but best case I would first need to get RCE:
->![](attachments/dc79e61f212fa47dac28202df4a60a31.png)
+:::success
+For CTF purposes I then got the `user.txt` flag, but best case I would first need to get RCE:
+![](attachments/dc79e61f212fa47dac28202df4a60a31.png)
+:::
 
 From here I could go ahead and try to get RCE.
 
@@ -69,8 +70,9 @@ I had hoped that there would be an `id_rsa` file inside the `.ssh` directory of 
 
 ![](attachments/21305b52be99f2ec8ae1c0bdf2824413.png)
 
->[!note]
->As always I'd have to think outside the box here, I tried to look up **LFI werkzeug** on Google however whatever I tried it didn't work. 
+:::note
+As always I'd have to think outside the box here, I tried to look up **LFI werkzeug** on Google however whatever I tried it didn't work. 
+:::
 
 Eventually I tried the following:
 
@@ -115,8 +117,9 @@ After some wrestling around, this turned out to be the correct one:
 
 The `[database]` part seems interesting, let's try to fetch the `gitea.db` file.
 
->[!success]
->This worked and returned a shitload of SQL code.
+:::success
+This worked and returned a shitload of SQL code.
+:::
 
 ![](attachments/43a14bae88362855e8715e0075bddaf1.png)
 
@@ -130,8 +133,9 @@ We will then delete the header in order to be able to query the db:
 
 ![](attachments/61ca0934bae5962a76f7a4f488f8c643.png)
 
->[!fail]
->This did NOT work and it wouldn't recognize the fail as a `.db` file, instead I opted for `curl` to save the file with full integrity.
+:::fail
+This did NOT work and it wouldn't recognize the fail as a `.db` file, instead I opted for `curl` to save the file with full integrity.
+:::
 
 ![](attachments/a4f53bb6371138a9ecfb89cd78dcf0e2.png)
 
@@ -162,8 +166,9 @@ Let's make a new query that grabs all relevant parts:
 
 ![](attachments/7b0645ff44943ebb03a2599d4f1644d4.png)
 
->[!fail]
->Unfortunately the root hash wouldn't crack.
+:::fail
+Unfortunately the root hash wouldn't crack.
+:::
 
 However the *developer* hash cracked right away:
 
@@ -252,11 +257,12 @@ gcc -fPIC -shared -o ./libxcb.so.1 a.c -nostartfiles
 ![](attachments/a1aa62793d39e34021ff51f948fd0660.png)
 
 
->[!summary]
->As ChatGPT summarizes the privesc technique:
->![](attachments/8b34b72a07f4000be5527c0576b73415.png)
->![](attachments/511d7ff9e8fff5d9bb4cd97499158d7d.png)
->Overall *MEDIUM* difficulty for me at this stage, definitely needed some help with the priv esc simply because I did not fully understand it yet.
+:::summary
+As ChatGPT summarizes the privesc technique:
+![](attachments/8b34b72a07f4000be5527c0576b73415.png)
+![](attachments/511d7ff9e8fff5d9bb4cd97499158d7d.png)
+Overall *MEDIUM* difficulty for me at this stage, definitely needed some help with the priv esc simply because I did not fully understand it yet.
+:::
 
 ---
 

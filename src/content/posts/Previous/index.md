@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Previous'
 published: 2025-09-18
 draft: false
@@ -191,8 +191,9 @@ Diving deeper into `/opt/examples` I find this:
 
 ![](attachments/c1d5d661e2ac9df896f120e4420cf9d0.png)
 
->[!note]
->My current user does *not* have any write privileges.
+:::note
+My current user does *not* have any write privileges.
+:::
 
 I took a dive into [the docs](https://developer.hashicorp.com/terraform/cli/config/environment-variables) where I found:
 

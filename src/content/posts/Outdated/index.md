@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Outdated'
 published: 2025-09-18
 draft: false
@@ -126,8 +126,9 @@ Let's download the file and check it out.
 
 This looks really promising!
 
->[!note]
->The print spooler service being on could result in an easy PrivEsc further on.
+:::note
+The print spooler service being on could result in an easy PrivEsc further on.
+:::
 
 We also get an email from this.
 
@@ -265,8 +266,9 @@ As expected, we can easily own *sflowers* in order to achieve full access over t
 
 As per [SpecterOps](https://bloodhound.specterops.io/resources/edges/add-key-credential-link):
 
->[!quote]
->Writing to this property allows an attacker to create â€œShadow Credentialsâ€ on the object and authenticate as the principal using kerberos PKINIT.
+:::quote
+Writing to this property allows an attacker to create “Shadow Credentials” on the object and authenticate as the principal using kerberos PKINIT.
+:::
 
 We can abuse this permission using `pywhisker`:
 
@@ -274,10 +276,11 @@ We can abuse this permission using `pywhisker`:
 
 We can't use this one yet since we don't have valid creds.
 
->[!note]
->For reference, I tried using the previously found credentials but they didn't work:
->
->![](attachments/96db3e6b6ae5ad3a23d070262bec379b.png)
+:::note
+For reference, I tried using the previously found credentials but they didn't work:
+
+![](attachments/96db3e6b6ae5ad3a23d070262bec379b.png)
+:::
 
 This meant that instead I'd have to download over the **Windows** version:
 
@@ -382,9 +385,10 @@ Invoke-SharpWSUS check /updateid:3c71320a-edbe-431f-9c71-e82515ceb8b4 /computern
 
 ![](attachments/0f9b3d9daf46c13527644e831ea10f3b.png)
 
->[!fail]
->This ended up soft failing and did not create a user, so instead I opted for a reverse shell.
->
+:::fail
+This ended up soft failing and did not create a user, so instead I opted for a reverse shell.
+
+:::
 
 I instead uploaded `nc.exe` and created a reverse shell that way:
 
@@ -406,8 +410,9 @@ The result is a *SYSTEM* shell:
 
 ![](attachments/4855df5d84d721eb49f47325b8f66663.png)
 
->[!warning]
->The above commands may fail or just not execute, keep trying and it will work eventually.
+:::warning
+The above commands may fail or just not execute, keep trying and it will work eventually.
+:::
 
 ### root.txt
 

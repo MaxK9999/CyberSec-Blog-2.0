@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Paper'
 published: 2025-09-18
 draft: false
@@ -15,8 +15,8 @@ toc: true
 ## Nmap
 
 ```bash
-â”Œâ”€â”€(kaliã‰¿kali)-[~]
-â””â”€$ nmap -sC -sV -sT -T5 -vvvv -p- 10.10.11.143
+┌──(kali㉿kali)-[~]
+└─$ nmap -sC -sV -sT -T5 -vvvv -p- 10.10.11.143
 
 PORT    STATE SERVICE  REASON  VERSION
 22/tcp  open  ssh      syn-ack OpenSSH 8.0 (protocol 2.0)

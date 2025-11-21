@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Puppy'
 published: 2025-09-18
 draft: false
@@ -254,8 +254,9 @@ I then went ahead and transferred the files:
 
 ![](attachments/b04ef1a5a726a014a085b1d14defdbcd.png)
 
->[!warning]
->Simply using `download` via `evil-winrm` failed.
+:::warning
+Simply using `download` via `evil-winrm` failed.
+:::
 
 ![](attachments/658a7e0d247976a4db57fdd55ef43735.png)
 

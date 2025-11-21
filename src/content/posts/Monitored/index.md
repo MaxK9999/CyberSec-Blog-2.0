@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Monitored'
 published: 2025-09-18
 draft: false
@@ -134,8 +134,9 @@ username=svc&password=XjH7VCehowpR1xZB
 
 ![](attachments/0f486c633bf3fd8e1aea296786760262.png)
 
->[!warning]
->The highlighted line is absolutely paramount for success, without it the request will fail!
+:::warning
+The highlighted line is absolutely paramount for success, without it the request will fail!
+:::
 
 This gives us the following response:
 
@@ -202,11 +203,13 @@ Trying this out we see the following response:
 
 ![](attachments/f649a1e973b1463c10a5bf086b38529f.png)
 
->[!success]
->Error = good!
+:::success
+Error = good!
+:::
 
->[!note]
->Let's modify our SQLi, since the rest of the POC writeup goes on using SQLmap I will be diverting my course, since I cannot always use SQLmap in the wild (such as OSCP exam).
+:::note
+Let's modify our SQLi, since the rest of the POC writeup goes on using SQLmap I will be diverting my course, since I cannot always use SQLmap in the wild (such as OSCP exam).
+:::
 
 ![](attachments/912afb0318cc79eedea13313cceb03af.png)
 
@@ -222,9 +225,10 @@ This seemed to work and displayed the version, meaning our query worked!
 
 ![](attachments/2f034f61480bb79c1377cea9bcddc918.png)
 
->[!important]
->Going forward we need to make sure that our query throws an error message, or it will simply not be telling us the outcome of our query i.e.
->![](attachments/5d6bdc64731e1247db713a0f31917cbe.png)
+:::important
+Going forward we need to make sure that our query throws an error message, or it will simply not be telling us the outcome of our query i.e.
+![](attachments/5d6bdc64731e1247db713a0f31917cbe.png)
+:::
 
 ![](attachments/200269472b39305021d19e9343935a8e.png)
 
@@ -257,8 +261,9 @@ We will send our initial request to `Intruder` and then do the following:
 
 ![](attachments/9b873fef76b6a33bfa77c8c16beb21bb.png)
 
->[!warning]
->This will still be an enormously tedious process to check, however as per [this ippsec video](https://www.youtube.com/watch?v=Ulb2rm2qbJY) I learned how to make it a more grep-able output.
+:::warning
+This will still be an enormously tedious process to check, however as per [this ippsec video](https://www.youtube.com/watch?v=Ulb2rm2qbJY) I learned how to make it a more grep-able output.
+:::
 
 ![](attachments/a648bd7c5b8e2b549f62d4d3dae6ddff.png)
 
@@ -292,8 +297,9 @@ id=1 AND EXTRACTVALUE(1,concat(0x7e,(SELECT username from xi_users LIMIT 0,1)))
 
 ![](attachments/b68a3ac6b846afbf1eff29226ecce8d5.png)
 
->[!note]
->Since it can't give us full outputs we'll have to improvise by using the `SUBSTRING` command.
+:::note
+Since it can't give us full outputs we'll have to improvise by using the `SUBSTRING` command.
+:::
 
 ```sql
 id=1 AND EXTRACTVALUE(1,concat(0x7e,(SELECT substring(password,1,28) from xi_users LIMIT 0,1)))
@@ -309,8 +315,9 @@ IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
 
 I'll try to crack it for good measure.
 
->[!fail]
->Spoiler alert, this wouldn't crack.
+:::fail
+Spoiler alert, this wouldn't crack.
+:::
 
 
 ## New Account creation
@@ -391,11 +398,13 @@ From these files I noticed that `getprofile.sh` zipped log files:
 
 We will now be inspecting the `getprofile.sh` script and check for symlinks.
 
->[!important]
->When zipping files, symlinks are one of the most important things to look for.
+:::important
+When zipping files, symlinks are one of the most important things to look for.
+:::
 
->[!note]
->For this I will also be following along with the ippsec video as I do not know enough about symlinks.
+:::note
+For this I will also be following along with the ippsec video as I do not know enough about symlinks.
+:::
 
 ![](attachments/8c3e873499ffe36bbac93bd432bc149a.png)
 

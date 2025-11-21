@@ -1,16 +1,17 @@
-﻿---
+---
 title: 'HTB-Dog'
-published: 2025-09-18
+published: 2025-07-11
 draft: false
 toc: true
+tags: ['bee', 'git', 'git-dumper', 'password-spraying']
 ---
-**Start 08:55 11-07-2025**
 
 ---
 ```
 Scope:
 10.10.11.58
 ```
+
 # Recon
 ## Nmap
 
@@ -61,8 +62,9 @@ root
 BackDropJ2024DS2024
 ```
 
->[!note]
->However *root* is not recognized as a username so it must be solely for `mysql`.
+:::note
+However *root* is not recognized as a username so it must be solely for `mysql`.
+:::
 
 ### grep
 
@@ -175,8 +177,9 @@ I went ahead and copied over *john* and *jobert*'s hashes since these had a high
 
 ![](attachments/9d34d55dc058532504eb668ffce5d1e4.png)
 
->[!note]
->Makes sense since **Backdrop CMS** is based on **Drupal**.
+:::note
+Makes sense since **Backdrop CMS** is based on **Drupal**.
+:::
 
 ![](attachments/c630e699fcd29f12d8e56159b28b3617.png)
 
@@ -222,9 +225,3 @@ And now I'm *root*.
 ![](attachments/6921617b3a610d8f4583c53974a52570.png)
 
 ---
-
-**Finished 10:17 11-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#bee #git #password-spraying 

@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Nineveh'
 published: 2025-09-18
 draft: false
@@ -140,9 +140,10 @@ I tried a bunch of combinations but in the end I found this one to work:
 
 ![](attachments/4a8aa324efcaf9c5029fb6c63ef983e9.png)
 
->[!success]
->This is HIGHLY LIKELY because it still needs to read the note, when I input it without the `ninevehNotes` file it gives me this error:
->![](attachments/0a2491fc8025ee950cf18d69e7a511be.png)
+:::success
+This is HIGHLY LIKELY because it still needs to read the note, when I input it without the `ninevehNotes` file it gives me this error:
+![](attachments/0a2491fc8025ee950cf18d69e7a511be.png)
+:::
 
 
 # Foothold
@@ -222,9 +223,10 @@ I'll go ahead and look up whether there's some sort of exploit for this binary:
 
 Indeed there is, a pretty old one at that as well, let's grab it.
 
->[!note]
->There's also a `msfconsole` version of it, but I want to do it manually.
->![](attachments/25ce392348e864f5e49a0e15c3049525.png)
+:::note
+There's also a `msfconsole` version of it, but I want to do it manually.
+![](attachments/25ce392348e864f5e49a0e15c3049525.png)
+:::
 
 ![](attachments/5aad1c74c6f9ca867762c07d5fac86f9.png)
 

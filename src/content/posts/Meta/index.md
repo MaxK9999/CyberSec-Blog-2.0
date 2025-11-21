@@ -1,16 +1,16 @@
-﻿---
+---
 title: 'HTB-Meta'
-published: 2025-09-18
+published: 2025-10-27
 draft: false
 toc: true
+tags: ["mogrify", "ImageMagick", "exiftool", "ffuf", "CVE-2021-22204", "CVE-2020-29599", "neofetch"]
 ---
-**Start 15:25 27-10-2025**
 
----
 ```
 Scope:
 10.10.11.140
 ```
+
 # Recon
 ## Nmap
 
@@ -127,15 +127,15 @@ Next up I crafted the config file:
 
 ```
 %Image::ExifTool::UserDefined = (
-Â  Â Â 'Image::ExifTool::Exif::Main' => {
-Â  Â  Â  Â  0xc51b => {
-Â  Â  Â  Â  Â  Â  Name =>Â 'HasselbladExif',
-Â  Â  Â  Â  Â  Â  Writable =>Â 'string',
-Â  Â  Â  Â  Â  Â  WriteGroup =>Â 'IFD0',
-Â  Â  Â  Â  },
-Â  Â  },
+    'Image::ExifTool::Exif::Main' => {
+        0xc51b => {
+            Name => 'HasselbladExif',
+            Writable => 'string',
+            WriteGroup => 'IFD0',
+        },
+    },
 );
-1;Â #end%
+1; #end%
 ```
 
 Next up I inserted the payload into a random `jpg` file:
@@ -292,8 +292,9 @@ XDG_CONFIG_HOME=~/.config sudo neofetch
 
 ![](attachments/2072a20fcf0071274cb106346e33a397.png)
 
->[!tldr]
->This works since we're not passing any arguments after the `neofetch` command.
+:::tldr
+This works since we're not passing any arguments after the `neofetch` command.
+:::
 
 ### root.txt
 
@@ -302,9 +303,3 @@ XDG_CONFIG_HOME=~/.config sudo neofetch
 ![](attachments/f9a729ac1dd81822ab85eff403ad67a2.png)
 
 ---
-
-**Finished 17:26 27-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-#mogrify #ImageMagick #exiftool #ffuf #CVE-2021-22204 #CVE-2020-29599 #neofetch 

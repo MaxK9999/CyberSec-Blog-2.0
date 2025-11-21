@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Usage'
 published: 2025-09-18
 draft: false

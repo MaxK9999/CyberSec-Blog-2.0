@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Passage'
 published: 2025-09-18
 draft: false
@@ -35,8 +35,9 @@ We can leave comments:
 
 ![](attachments/ab7662dc067adc451774077f190ba8dc.png)
 
->[!note]
->The blog mentions that they've implemented a **Fail2Ban** system where it will block us for 2 minutes in case of heavy traffic so we will have to limit our automated testing.
+:::note
+The blog mentions that they've implemented a **Fail2Ban** system where it will block us for 2 minutes in case of heavy traffic so we will have to limit our automated testing.
+:::
 
 I checked out the tech stack:
 

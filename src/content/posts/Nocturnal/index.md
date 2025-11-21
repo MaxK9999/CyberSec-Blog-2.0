@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Nocturnal'
 published: 2025-09-18
 draft: false
@@ -87,8 +87,9 @@ I then went on to manipulate the request with the found usernames and found this
 
 ![](attachments/9b834f48370db906debb51cc72f1fa84.png)
 
->[!note]
->The other users had no files.
+:::note
+The other users had no files.
+:::
 
 ![](attachments/e37bb7390893adb97941dc50de266df8.png)
 
@@ -184,8 +185,9 @@ I started off with `linpeas.sh`:
 
 ![](attachments/518a40288c00a35d4e27e41b8779e0ae.png)
 
->[!note]
->There's a bunch of ports open on localhost, I might have to check it out.
+:::note
+There's a bunch of ports open on localhost, I might have to check it out.
+:::
 
 ## Port Forward
 

@@ -1,16 +1,16 @@
-﻿---
+---
 title: 'HTB-Editor'
-published: 2025-09-18
+published: 2025-09-16
 draft: false
 toc: true
 ---
-**Start 12:44 16-09-2025**
 
 ---
 ```
 Scope:
 10.10.11.80
 ```
+
 # Recon
 ## Nmap
 
@@ -180,7 +180,3 @@ I then transfered it over and executed it after adding `/tmp` to my `$PATH`:
 ![](attachments/5a3460909914a8312b15c9e85ccb046a.png)
 
 ---
-
-**Finished 14:34 16-09-2025**
-
-[^Links]: [[Hack The Box]]

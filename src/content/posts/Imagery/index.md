@@ -1,16 +1,16 @@
-﻿---
+---
 title: 'HTB-Imagery'
-published: 2025-09-18
+published: 2025-11-20
 draft: false
 toc: true
+tags: ["XSS", "LFI", "command-injection", "pyAesCrypt", "SUID", "cron"]
 ---
-**Start 08:35 28-09-2025**
 
----
 ```
 Scope:
 10.10.11.88
 ```
+
 # Recon
 ## Nmap
 
@@ -353,7 +353,7 @@ with open(wordlist, "r", encoding="latin-1") as wl:
         try:
             if try_password(password):
                 print(f"{GREEN}[+] Password found: {password}{RESET}")
-                print("[âœ“] Decryption finished, check out output file.")
+                print("[✓] Decryption finished, check out output file.")
                 break
         except KeyboardInterrupt:
             print("\n[!] Interrupted.")
@@ -435,9 +435,3 @@ After waiting for a short while:
 ![](attachments/8491d93af1e575a6a7baf2b5fa037b9e.png)
 
 ---
-
-**Finished 18:00 20-11-2025**
-
-[^Links]: [[Hack The Box]]
-
-#XSS #LFI #command-injection #pyAesCrypt #SUID #cron 

@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Outbound'
 published: 2025-09-18
 draft: false
@@ -115,8 +115,9 @@ Eventually I figured to respray the password and got access as *tyler* using `su
 
 ![](attachments/5f7b4c705ec1ae530d6bab297240cac2.png)
 
->[!note]
->After being stuck for a while I returned to `mysql` and found that I needed to decypher the session:
+:::note
+After being stuck for a while I returned to `mysql` and found that I needed to decypher the session:
+:::
 
 ### Return to MySQL
 

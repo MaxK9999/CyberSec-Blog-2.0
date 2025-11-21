@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Voleur'
 published: 2025-09-18
 draft: false
@@ -113,8 +113,9 @@ I find that I can read a bunch of shares! I'll check out the non-default IT shar
 
 Right away I find an excel file that appears to be useful!
 
->[!note]
->I tried out `smbclient` but it wouldn't connect, instead I opted for `impacket-smbclient`:
+:::note
+I tried out `smbclient` but it wouldn't connect, instead I opted for `impacket-smbclient`:
+:::
 
 ![](attachments/1af35c17cccf34045251bd0d0a3074dc.png)
 
@@ -151,8 +152,9 @@ Now that I know that that account has valid creds I return to `bloodhound`.
 
 ![](attachments/05682cab2c679644d99b55c80013bb9e.png)
 
->[!note]
->Not only can we go ahead and `WriteSPN` on *svc_winrm*, but we can also `GenericWrite` via **RESTORE_USERS** to *lacey.miller*. This means we can reinstate *todd.wolfe*'s account, and make him part of the domain admin group!
+:::note
+Not only can we go ahead and `WriteSPN` on *svc_winrm*, but we can also `GenericWrite` via **RESTORE_USERS** to *lacey.miller*. This means we can reinstate *todd.wolfe*'s account, and make him part of the domain admin group!
+:::
 
 ## WriteSPN
 ### Kerberoasting
@@ -191,8 +193,9 @@ Using the following sequence of commands I was able to get easy access:
 
 ## Lateral Movement
 
->[!note]
->In order to move laterally I have to download over `RunasCs.exe`, then I can go ahead and get an elevated shell as *svc_ldap* on the system, which in turn will allow me to restore the *todd.wolfe* account.
+:::note
+In order to move laterally I have to download over `RunasCs.exe`, then I can go ahead and get an elevated shell as *svc_ldap* on the system, which in turn will allow me to restore the *todd.wolfe* account.
+:::
 
 ![](attachments/51792b6db5ca81a9c1ed32504f039e1c.png)
 
@@ -205,7 +208,7 @@ Using the following sequence of commands I was able to get easy access:
 I can now use the following commands to restore the account:
 
 ```powershell
-Get-ADObjectÂ -FilterÂ 'isDeleted -eq $true'Â -IncludeDeletedObjects
+Get-ADObject -Filter 'isDeleted -eq $true' -IncludeDeletedObjects
 ```
 
 ![](attachments/4d2a45b0ae10f770670a58d915032ae9.png)
@@ -315,9 +318,10 @@ It was within the `/mnt` directory where I was able to find all the sweet stuff:
 
 ![](attachments/c615163371175474f4a1ea07a707cc71.png)
 
->[!note] 
->I could essentially copy over `NTDS.dit` now and get the Admin password!
->
+:::note
+I could essentially copy over `NTDS.dit` now and get the Admin password!
+
+:::
 
 To make my life easier I used `sudo su` and found the juicy stuff:
 
@@ -328,7 +332,7 @@ To make my life easier I used `sudo su` and found the juicy stuff:
 I copied it over using the following command:
 
 ```bash
-scpÂ -i id_rsaÂ -PÂ 2222Â -rÂ "svc_backup@dc.voleur.htb:/mnt/c/IT/Third-Line Support/Backups"Â .
+scp -i id_rsa -P 2222 -r "svc_backup@dc.voleur.htb:/mnt/c/IT/Third-Line Support/Backups" .
 ```
 
 ![](attachments/b4c4e824c7878c1fc52fd66f3039f6e6.png)

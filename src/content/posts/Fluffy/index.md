@@ -1,10 +1,10 @@
-﻿---
+---
 title: 'HTB-Fluffy'
-published: 2025-09-18
+published: 2025-06-26
 draft: false
 toc: true
+tags: ["kerberoasting", "ShadowCredentialsAttack", "ESC16", "BloodyAD", "BloodHound", "certipy-ad"]
 ---
-**Start 18:20 26-06-2025**
 
 ---
 ```
@@ -14,6 +14,7 @@ Scope:
 Creds:
 j.fleischman / J0elTHEM4n1990!
 ```
+
 # Recon
 ## Nmap
 
@@ -178,8 +179,9 @@ But other than that pretty useless:
 
 ![](attachments/c408a0a5ffbf5f41563a8915a0814a51.png)
 
->[!caution]
->Problem was however that none of the other accounts could log in via `winrm`, so I had to think of something else.
+:::caution
+Problem was however that none of the other accounts could log in via `winrm`, so I had to think of something else.
+:::
 
 We do find the following juicy stuff:
 
@@ -195,8 +197,9 @@ certipy-ad find -u 'CA_SVC@fluffy.htb' -hashes ':ca0f4f9e9eb8a092addf53bb03fc98c
 
 It seems to be vulnerable to **ESC16**!
 
->[!note]
->[This blog post](https://medium.com/@muneebnawaz3849/ad-cs-esc16-misconfiguration-and-exploitation-9264e022a8c6) goes in detail about exploiting this vulnerability.
+:::note
+[This blog post](https://medium.com/@muneebnawaz3849/ad-cs-esc16-misconfiguration-and-exploitation-9264e022a8c6) goes in detail about exploiting this vulnerability.
+:::
 
 ## ESC16 Abuse
 ### Forging Administrator UPN
@@ -252,9 +255,10 @@ certipy-ad auth -pfx administrator.pfx -username 'administrator' -dc-ip 10.10.11
 
 ![](attachments/43325bed2ae0c6c0f3e01cd444e591db.png)
 
->[!note]
->You can use the command without `-ldap-shell` and it will give you the NTLM hash instead:
->![](attachments/e10be4cee3f222012a63df39951dba9a.png)
+:::note
+You can use the command without `-ldap-shell` and it will give you the NTLM hash instead:
+![](attachments/e10be4cee3f222012a63df39951dba9a.png)
+:::
 
 ## evil-winrm as Administrator
 
@@ -269,9 +273,3 @@ I am now successfully logged in as *Administrator*, let's get `root.txt`:
 ![](attachments/216f8616ee0fcaea1c8b4e283dce3e45.png)
 
 ---
-
-**Finished 21:19 26-06-2025**
-
-[^Links]: [[Hack The Box]]
-
-#kerberoasting #ShadowCredentialsAttack #ESC16 #BloodyAD #BloodHound #certipy-ad 

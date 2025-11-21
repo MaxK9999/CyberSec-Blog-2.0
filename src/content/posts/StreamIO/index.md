@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-StreamIO'
 published: 2025-09-18
 draft: false
@@ -127,8 +127,9 @@ I opened up `burp` and started playing around with the params, thinking I could 
 
 ![](attachments/2673139a71a608ba3aa461bac694b79c.png)
 
->[!note]
->For further testing I had to leverage the [[(My)SQL Injection.pdf]] cheatsheet.
+:::note
+For further testing I had to leverage the [[(My)SQL Injection.pdf]] cheatsheet.
+:::
 
 Since we're dealing with a **Windows** machine however, we're HIGHLY LIKELY going to be injecting `MSSQL` commands.
 
@@ -146,11 +147,13 @@ I went ahead and inserted the `@@version` command to check the MSSQL version:
 
 ![](attachments/21cec26ab75e2941414ed1ede5e66360.png)
 
->[!note]
->For the following I went over to the website since it wasn't clearly readable on `burp`.
+:::note
+For the following I went over to the website since it wasn't clearly readable on `burp`.
+:::
 
->[!important]
->Sidenote: for all the below queries I had to resort to [this cheatsheet](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md)
+:::important
+Sidenote: for all the below queries I had to resort to [this cheatsheet](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md)
+:::
 
 I then enumerated the databases.
 
@@ -170,8 +173,9 @@ Next up I enumerated the `users` columns:
 
 Next I enumerated the usernames:
 
->[!caution]
->There was a metric shit ton of them.
+:::caution
+There was a metric shit ton of them.
+:::
 
 ![](attachments/8b0364f03aa05808a64698c876ab8eea.png)
 
@@ -228,8 +232,9 @@ As I quickly found out, there's another param here `debug`.
 
 ![](attachments/524a740f7b0d8d0d836e8c1ab4cee12a.png)
 
->[!note]
->I honestly got a bit stuck here and had no clue what to do, then checked a writeup and understood that I should use `php wrappers`, just as explained in [[9. Common Web App Attacks#9.2.2 - PHP Wrappers]].
+:::note
+I honestly got a bit stuck here and had no clue what to do, then checked a writeup and understood that I should use `php wrappers`, just as explained in [[9. Common Web App Attacks#9.2.2 - PHP Wrappers]].
+:::
 
 ![](attachments/a2df4ffd4b869e4d2cbc6baf96c06ae2.png)
 
@@ -265,8 +270,9 @@ I'll create a simple `shell.php` file:
 
 ![](attachments/469a0889dedb7224016b512fe218275d.png)
 
->[!note]
->Since the server is running `eval` I won't have to use `<php?>` wrappers.
+:::note
+Since the server is running `eval` I won't have to use `<php?>` wrappers.
+:::
 
 We can then run the following in order to include our file, run it as a `POST` request, and finally get RCE.
 
@@ -304,8 +310,9 @@ Which resulted in the following:
 
 ![](attachments/dfd8f063f133042fcdc79bdc58987217.png)
 
->[!todo]
->- Enumerate and find the MSSQL db credentials inside the `C:\inetpub` directory
+:::todo
+- Enumerate and find the MSSQL db credentials inside the `C:\inetpub` directory
+:::
 
 ### Creds
 

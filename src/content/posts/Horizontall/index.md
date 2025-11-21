@@ -1,16 +1,16 @@
-﻿---
+---
 title: 'HTB-Horizontall'
-published: 2025-09-18
+published: 2025-10-25
 draft: false
 toc: true
+tags: ["pwnkit", "CVE-2019-19609", "vhosts"]
 ---
-**Start 12:17 25-10-2025**
 
----
 ```
 Scope:
 10.10.11.105
 ```
+
 # Recon
 ## Nmap
 
@@ -137,9 +137,3 @@ The priv esc was actually rather simple, we indeed just had to run `pwnkit.py`:
 ![](attachments/730951e8a082375f91e4b4787b9f8b35.png)
 
 ---
-
-**Finished 13:25 25-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-#pwnkit #CVE-2019-19609 #vhosts 

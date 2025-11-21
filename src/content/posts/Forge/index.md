@@ -1,16 +1,17 @@
-﻿---
+---
 title: 'HTB-Forge'
-published: 2025-09-18
+published: 2025-10-27
 draft: false
 toc: true
+tags: ["SSRF", "CWES Prep"]
 ---
-**Start 17:36 27-10-2025**
 
 ---
 ```
 Scope:
 10.10.11.111
 ```
+
 # Recon
 ## Nmap
 
@@ -189,8 +190,9 @@ We can then use the following command to spawn a *root* shell:
 
 ![](attachments/59787c3a8d64ce97f686b5fd7d71fcbd.png)
 
->[!TLDR]
->When the exception is caught, the code explicitly calls `pdb.post_mortem(e.__traceback__)`. `post_mortem()` receives the traceback object (`e.__traceback__`) and starts `pdb` positioned at the point of the exception. That gives you an interactive `(Pdb)` prompt in the terminal where the root process was started (the terminal running `sudo /usr/bin/python3 /opt/remote-manage.py`).
+:::tldr
+When the exception is caught, the code explicitly calls `pdb.post_mortem(e.__traceback__)`. `post_mortem()` receives the traceback object (`e.__traceback__`) and starts `pdb` positioned at the point of the exception. That gives you an interactive `(Pdb)` prompt in the terminal where the root process was started (the terminal running `sudo /usr/bin/python3 /opt/remote-manage.py`).
+:::
 
 ### root.txt
 
@@ -199,9 +201,3 @@ We can then use the following command to spawn a *root* shell:
 ![](attachments/bbd0f5c43b41ba80fe737fc218b252ae.png)
 
 ---
-
-**Finished 18:45 27-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-#SSRF 

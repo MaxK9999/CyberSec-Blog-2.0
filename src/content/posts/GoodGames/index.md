@@ -1,16 +1,16 @@
-﻿---
+---
 title: 'HTB-GoodGames'
-published: 2025-09-18
+published: 2025-10-28
 draft: false
 toc: true
+tags: ["docker-escape", "docker", "SSTI", "SQLi", "sqlmap"]
 ---
-**Start 12:07 28-10-2025**
 
----
 ```
 Scope:
 10.10.11.130
 ```
+
 # Recon
 ## Nmap
 
@@ -108,8 +108,9 @@ However since this is **Flask** I tried out to exploit a **SSTI** vulnerability:
 
 It worked since this is the expected output of the `jinja` templating language.
 
->[!note]
->The result will enable us to deduce the template engine used by the web application. In Jinja, the result will beÂ `7777777`, while in Twig for example, the result will beÂ `49`. Since this application is running on **Flask** though, `jinja` is the only viable option here.
+:::note
+The result will enable us to deduce the template engine used by the web application. In Jinja, the result will be `7777777`, while in Twig for example, the result will be `49`. Since this application is running on **Flask** though, `jinja` is the only viable option here.
+:::
 
 We can start testing various payloads, the following for example outputs the web application's configuration:
 
@@ -225,9 +226,3 @@ We notice that we've successfully escaped the docker container.
 ![](attachments/1701d2f190f518cf421a30f20a226c1f.png)
 
 ---
-
-**Finished 14:00 28-10-2025**
-
-[^Links]: [[Hack The Box]]
-
-#docker-escape #docker #SSTI #SQLi #sqlmap 

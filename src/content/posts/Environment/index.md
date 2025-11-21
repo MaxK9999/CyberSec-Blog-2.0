@@ -1,16 +1,17 @@
-﻿---
+---
 title: 'HTB-Environment'
-published: 2025-09-18
+published: 2025-07-14
 draft: false
 toc: true
+tags: ['BASH_ENV', 'FileUploadAttacks', 'gnupg']
 ---
-**Start 12:00 14-07-2025**
 
 ---
 ```
 Scope:
 10.10.11.67
 ```
+
 # Recon
 ## Nmap
 
@@ -117,8 +118,9 @@ And in the response we can see the url:
 
 ![](attachments/bf10a170b1ab5fd508054634b8ed0682.png)
 
->[!caution]
->This however would upload the file, but would not give us execution, we had to find another way.
+:::caution
+This however would upload the file, but would not give us execution, we had to find another way.
+:::
 
 ```bash
 Content-Disposition: form-data; name="upload"; filename="web.php."
@@ -212,14 +214,15 @@ I can easily exploit it as follows:
 
 ![](attachments/7ce94a3ac3eedd1763488e19de39d80f.png)
 
->[!tldr]
->But why does this work?
->- `/usr/bin/systeminfo` is a **Bash script** (`file /usr/bin/systeminfo` confirmed this).
->- The script is executed via `sudo`, running as root. 
->- When Bash runs a non-interactive shell to execute the script, **it looks for `BASH_ENV` and sources it if set**.
->- You set `BASH_ENV=./root.sh`, where `root.sh` contains `/bin/bash -p`.   
->- So instead of just running the script commands, Bash first runs your root shell.
->- This results in a **root shell spawned before the script output**, effectively escalating privileges.
+:::tldr
+But why does this work?
+- `/usr/bin/systeminfo` is a **Bash script** (`file /usr/bin/systeminfo` confirmed this).
+- The script is executed via `sudo`, running as root. 
+- When Bash runs a non-interactive shell to execute the script, **it looks for `BASH_ENV` and sources it if set**.
+- You set `BASH_ENV=./root.sh`, where `root.sh` contains `/bin/bash -p`.   
+- So instead of just running the script commands, Bash first runs your root shell.
+- This results in a **root shell spawned before the script output**, effectively escalating privileges.
+:::
 
 ### root.txt
 
@@ -228,9 +231,3 @@ I can easily exploit it as follows:
 ![](attachments/e34714ce835a34f311bd467939388d93.png)
 
 ---
-
-**Finished 14:01 14-07-2025**
-
-[^Links]: [[Hack The Box]]
-
-#BASH_ENV #FileUploadAttacks #gnupg 

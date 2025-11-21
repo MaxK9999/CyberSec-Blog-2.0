@@ -1,4 +1,4 @@
-﻿---
+---
 title: 'HTB-Certificate'
 published: 2025-07-14
 draft: false
@@ -161,9 +161,10 @@ But since I also added the `mal/shell.php` directory inside the `zip`, I can eas
 
 ![](attachments/26c6c38d34d131863156e2a696a51089.png)
 
->[!fail]
->I screwed up with my payload:
->![](attachments/abd3964a84d516586596c3e565a0cf98.png)
+:::fail
+I screwed up with my payload:
+![](attachments/abd3964a84d516586596c3e565a0cf98.png)
+:::
 
 I used the `ivan` shell:
 
@@ -173,9 +174,10 @@ I used the `ivan` shell:
 
 ![](attachments/e6ec36c00c463c3c208e221db5a95f42.png)
 
->[!tip]
->In order to not fuck something up and having to restart a shell, I got a double reverse shell to `penelope`:
->![](attachments/035862bde96ed0c52367df1b8607b970.png)
+:::tip
+In order to not fuck something up and having to restart a shell, I got a double reverse shell to `penelope`:
+![](attachments/035862bde96ed0c52367df1b8607b970.png)
+:::
 
 ## Enumeration
 
@@ -374,8 +376,9 @@ I go ahead and upload [this tool](https://github.com/CsEnox/SeManageVolumeExploi
 
 ![](attachments/5bf4fed8f722be8c1363dae1ae5dbb32.png)
 
->[!note]
->Doing it the `dll` route didn't work, Defender instantly flagged it.
+:::note
+Doing it the `dll` route didn't work, Defender instantly flagged it.
+:::
 
 I'll now create a `temp` directory:
 

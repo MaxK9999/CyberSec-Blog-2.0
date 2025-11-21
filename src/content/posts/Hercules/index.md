@@ -1,16 +1,16 @@
-﻿---
+---
 title: 'HTB-Hercules'
-published: 2025-09-18
+published: 2025-11-19
 draft: false
 toc: true
+tags: ["ADCS", "ESC3", "ShadowCertificate", "certipy-ad", "LDAP-Injection", "kerbrute", "BloodyAD", "dotnet", "scripting", "LFI"]
 ---
-**Start 10:55 19-11-2025**
 
----
 ```
 Scope:
 10.10.11.91
 ```
+
 # Recon
 ## Nmap
 
@@ -130,8 +130,9 @@ We need to be caucious with our testing:
 
 It appears that there is some sort of **rate-limiting** present. 
 
->[!note]
->Since the found users are using the `ldap` protocol this could mean that there is a presence of **LDAP Injection** here.
+:::note
+Since the found users are using the `ldap` protocol this could mean that there is a presence of **LDAP Injection** here.
+:::
 
 ### LDAP Injection
 
@@ -141,8 +142,9 @@ For my testing I would use [this cheatsheet](https://github.com/swisskyrepo/Payl
 
 Unfortunately this didn't show anything and it was more of a *blind* injection.
 
->[!note]
->I was stuck here and was provided the following script that would automate the LDAP Injection testing for me.
+:::note
+I was stuck here and was provided the following script that would automate the LDAP Injection testing for me.
+:::
 
 With the help of the below script we could quickly enumerate whether a user has a password in their **description** field. 
 
@@ -321,8 +323,9 @@ I used `nxc` to password spray:
 
 ![](attachments/321d0f5f788a1f58fc73d9aadc10fc9f.png)
 
->[!note]
->It mentions `STATUS_NOT_SUPPORTED` instead of logon failure, meaning we need to append the `-k` option to enable the kerberos pre_auth  
+:::note
+It mentions `STATUS_NOT_SUPPORTED` instead of logon failure, meaning we need to append the `-k` option to enable the kerberos pre_auth  
+:::
 
 ![](attachments/f987cefea3174881e226e28f8deebfe7.png)
 
@@ -337,8 +340,9 @@ Checking the target with the `get-desc-users` module we see the password in *jon
 
 ![](attachments/a291d2b72ca7760c2206093aa05fe3db.png)
 
->[!important]
->Don't store your password in the description ðŸ˜
+:::important
+Don't store your password in the description 😁
+:::
 
 ![](attachments/a5a620fd31a51e58c9282e5c66d0e7fc.png)
 
@@ -454,8 +458,9 @@ legacyFormsAuthenticationTicketEncryptor.Encrypt(formsAuthenticationTicket);
 }
 ```
 
->[!important]
->Pay attention to the above, this will basically forge us access as the *web_admin* account that we've found previously
+:::important
+Pay attention to the above, this will basically forge us access as the *web_admin* account that we've found previously
+:::
 
 ![](attachments/0d93adefba315b507da6fc9c9cbc6225.png)
 
@@ -517,10 +522,11 @@ Using these creds I enumerated the domain using `bloodhound`:
 
 ![](attachments/5ea3cd00b09c76ac9d3139e51da6dec9.png)
 
->[!note]
->In hindsight I could've also done this using the creds for `ken.w`:
->
->![](attachments/a13c2a0ceeb25fea07176822109ba501.png)
+:::note
+In hindsight I could've also done this using the creds for `ken.w`:
+
+![](attachments/a13c2a0ceeb25fea07176822109ba501.png)
+:::
 
 I then launched `bloodhound` and ingested the files:
 
@@ -634,10 +640,11 @@ Now we can go ahead and request the ticket for the modified *Auditor* user:
 # Foothold
 ## 5986/TCP - WINRMS
 
->[!important]
->For the following I used [this python binary](https://github.com/ozelis/winrmexec):
->
->![](attachments/1768403a1aaeee5565ccc02cf3f39f9a.png)
+:::important
+For the following I used [this python binary](https://github.com/ozelis/winrmexec):
+
+![](attachments/1768403a1aaeee5565ccc02cf3f39f9a.png)
+:::
 
 Finally we get access as the *Auditor* user with the following `winrmexec` command:
 
@@ -800,8 +807,9 @@ The `Scripts` directory:
 
 ## Enabling iis_administrator account
 
->[!note]
->This is the same as [[#Enabling fernando.r account]] but this time around from `linux` using `bloodyAD`, this is simply because it did not work for me using `powerview` here.
+:::note
+This is the same as [[#Enabling fernando.r account]] but this time around from `linux` using `bloodyAD`, this is simply because it did not work for me using `powerview` here.
+:::
 
 We're gonna be running the `aCleanup.ps1` script.
 
@@ -824,8 +832,9 @@ bloodyAD --host DC.hercules.htb -d hercules.htb -u 'Auditor' -k remove uac "IIS_
 
 ![](attachments/9363fe6d0fbb412d9a3fe28a6f49b6c7.png)
 
->[!warning]
->If the latter command fails for whatever reason, execute the `aCleanup.ps1` script again and repeat the commands.
+:::warning
+If the latter command fails for whatever reason, execute the `aCleanup.ps1` script again and repeat the commands.
+:::
 
 We will now be changing the password for the *IIS_Administrator* user:
 
@@ -891,9 +900,3 @@ After exporting the ticket we can log in, smooth sailing.
 ![](attachments/f9208f81dc6ba1818e495fb493f66136.png)
 
 ---
-
-**Finished 19:34 19-11-2025**
-
-[^Links]: [[Hack The Box]]
-
-#ADCS #ESC3 #ShadowCertificate #certipy-ad #LDAP-Injection #kerbrute #BloodyAD #dotnet #scripting #LFI 
