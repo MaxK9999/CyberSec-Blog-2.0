@@ -23,6 +23,27 @@ const postsCollection = defineCollection({
     }),
 })
 
+const blogsCollection = defineCollection({
+  loader: glob({ pattern: ['**/*.md', '**/*.mdx'], base: './src/content/blogs' }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      published: z.coerce.date(),
+      draft: z.boolean().optional().default(false),
+      description: z.string().optional(),
+      author: z.string().optional(),
+      series: z.string().optional(),
+      tags: z.array(z.string()).optional().default([]),
+      coverImage: z
+        .strictObject({
+          src: image(),
+          alt: z.string(),
+        })
+        .optional(),
+      toc: z.boolean().optional().default(true),
+    }),
+})
+
 const homeCollection = defineCollection({
   loader: glob({ pattern: ['home.md', 'home.mdx'], base: './src/content' }),
   schema: ({ image }) =>
@@ -52,6 +73,7 @@ const addendumCollection = defineCollection({
 
 export const collections = {
   posts: postsCollection,
+  blogs: blogsCollection,
   home: homeCollection,
   addendum: addendumCollection,
 }

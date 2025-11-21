@@ -1,0 +1,30 @@
+---
+import type { GetStaticPaths } from 'astro'
+import Layout from '~/layouts/Layout.astro'
+import { getSortedBlogs } from '~/utils'
+import Pagination from '~/components/Pagination.astro'
+import siteConfig from '~/site.config'
+import BlogPreview from '~/components/BlogPreview.astro'
+import PageHeader from '~/components/PageHeader.astro'
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const sortedBlogs = await getSortedBlogs()
+  return paginate(sortedBlogs.reverse(), { pageSize: siteConfig.pageSize })
+}) satisfies GetStaticPaths
+
+const { page } = Astro.props
+const pageTitle = 'Blog Archive' + (page.currentPage > 1 ? ` - Page ${page.currentPage}` : '')
+---
+
+<Layout title={pageTitle} description="All blogs in the archive">
+  <div class="mt-2 sm:mt-0">
+    <PageHeader />
+    {page.data.map((blog) => <BlogPreview blog={blog} />)}
+    <Pagination
+      prevLink={page.url.prev ? page.url.prev : undefined}
+      prevText="Newer Blogs"
+      nextLink={page.url.next ? page.url.next : undefined}
+      nextText="Older Blogs"
+    />
+  </div>
+</Layout>

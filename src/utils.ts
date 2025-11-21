@@ -329,3 +329,118 @@ export function getPostSequenceContext(
   const next = index < posts.length - 1 ? posts[index + 1] : undefined
   return { index, prev, next }
 }
+
+// ----------------- BLOG UTILS -----------------
+
+export async function getSortedBlogs() {
+  const allBlogs = await getCollection('blogs', ({ data }) => {
+    return import.meta.env.PROD ? data.draft !== true : true
+  })
+  const sortedBlogs = allBlogs.sort((a, b) => {
+    return a.data.published < b.data.published ? -1 : 1
+  })
+  return sortedBlogs
+}
+
+abstract class BlogsCollationGroup implements CollationGroup<'blogs'> {
+  title: string
+  url: string
+  collations: Collation<'blogs'>[]
+
+  constructor(title: string, url: string, collations: Collation<'blogs'>[]) {
+    this.title = title
+    this.url = url
+    this.collations = collations
+  }
+
+  sortCollationsAlpha(): Collation<'blogs'>[] {
+    this.collations.sort((a, b) => a.title.localeCompare(b.title))
+    return this.collations
+  }
+
+  sortCollationsLargest(): Collation<'blogs'>[] {
+    this.collations.sort((a, b) => b.entries.length - a.entries.length)
+    return this.collations
+  }
+
+  sortCollationsMostRecent(): Collation<'blogs'>[] {
+    this.collations.sort((a, b) => {
+      const aDate = a.entries[a.entries.length - 1].data.published
+      const bDate = b.entries[b.entries.length - 1].data.published
+      return aDate < bDate ? 1 : -1
+    })
+    return this.collations
+  }
+
+  add(item: CollectionEntry<'blogs'>, collationTitle: string): void {
+    const collationTitleSlug = slug(collationTitle.trim())
+    const existing = this.collations.find((i) => i.titleSlug === collationTitleSlug)
+    if (existing) {
+      const alreadyHasThisBlog = existing.entries.find((e) => e.id === item.id)
+      if (!alreadyHasThisBlog) {
+        existing.entries.push(item)
+      }
+    } else {
+      this.collations.push({
+        title: collationTitle,
+        titleSlug: collationTitleSlug,
+        url: `${this.url}/${encodeURIComponent(collationTitleSlug)}`,
+        entries: [item],
+      })
+    }
+  }
+
+  match(rawKey: string): Collation<'blogs'> | undefined {
+    return this.collations.find((entry) => entry.title === rawKey)
+  }
+
+  matchMany(rawKeys: string[]): Collation<'blogs'>[] {
+    return this.collations.filter((entry) => rawKeys.includes(entry.title))
+  }
+}
+
+export class BlogSeriesGroup extends BlogsCollationGroup {
+  private constructor(title: string, url: string, items: Collation<'blogs'>[]) {
+    super(title, url, items)
+  }
+
+  static async build(blogs?: CollectionEntry<'blogs'>[]): Promise<BlogSeriesGroup> {
+    const sortedBlogs = blogs || (await getSortedBlogs())
+    const seriesGroup = new BlogSeriesGroup('Series', '/blog-series', [])
+    sortedBlogs.forEach((blog) => {
+      const frontmatterSeries = blog.data.series
+      if (frontmatterSeries) {
+        seriesGroup.add(blog, frontmatterSeries)
+      }
+    })
+    return seriesGroup
+  }
+}
+
+export class BlogTagsGroup extends BlogsCollationGroup {
+  private constructor(title: string, url: string, items: Collation<'blogs'>[]) {
+    super(title, url, items)
+  }
+
+  static async build(blogs?: CollectionEntry<'blogs'>[]): Promise<BlogTagsGroup> {
+    const sortedBlogs = blogs || (await getSortedBlogs())
+    const tagsGroup = new BlogTagsGroup('Tags', '/blog-tags', [])
+    sortedBlogs.forEach((blog) => {
+      const frontmatterTags = blog.data.tags || []
+      frontmatterTags.forEach((tag) => {
+        tagsGroup.add(blog, tag)
+      })
+    })
+    return tagsGroup
+  }
+}
+
+export function getBlogSequenceContext(
+  blog: CollectionEntry<'blogs'>,
+  blogs: CollectionEntry<'blogs'>[],
+) {
+  const index = blogs.findIndex((b) => b.id === blog.id)
+  const prev = index > 0 ? blogs[index - 1] : undefined
+  const next = index < blogs.length - 1 ? blogs[index + 1] : undefined
+  return { index, prev, next }
+}

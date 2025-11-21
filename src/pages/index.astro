@@ -1,8 +1,9 @@
 ---
 import Layout from '~/layouts/Layout.astro'
-import { getSortedPosts } from '~/utils'
+import { getSortedPosts, getSortedBlogs } from '~/utils'
 import { getCollection, render } from 'astro:content'
 import PostPreview from '~/components/PostPreview.astro'
+import BlogPreview from '~/components/BlogPreview.astro'
 import Pagination from '~/components/Pagination.astro'
 import BlockHeader from '~/components/BlockHeader.astro'
 import HomeBanner from '~/components/HomeBanner.astro'
@@ -10,6 +11,7 @@ import siteConfig from '~/site.config'
 import TagsSection from '~/components/TagsSection.astro'
 import SeriesSection from '~/components/SeriesSection.astro'
 
+// Home content
 const home = await getCollection('home')
 let HomeContent
 let homeAvatarImage
@@ -21,52 +23,67 @@ if (home.length > 0) {
   homeAvatarImage = homeEntry.data.avatarImage
   homeGithubCalendar = homeEntry.data.githubCalendar
 }
+
+// Posts
 const sortedPosts = await getSortedPosts()
 const postsHaveTags = sortedPosts.some(
-  (post) => post.data.tags && post.data.tags.length > 0,
+  (post) => post.data.tags && post.data.tags.length > 0
 )
-
 const postsHaveSeries = sortedPosts.some((post) => post.data.series)
+
+// Blogs
+const sortedBlogs = await getSortedBlogs()
+const blogsHaveTags = sortedBlogs.some(
+  (blog) => blog.data.tags && blog.data.tags.length > 0
+)
 ---
 
 <Layout>
-  {
-    HomeContent && (
-      <HomeBanner avatarImage={homeAvatarImage} githubCalendar={homeGithubCalendar}>
-        <HomeContent />
-      </HomeBanner>
-    )
-  }
-  {
-    postsHaveSeries && (
-      <section>
-        <BlockHeader>Series</BlockHeader>
-        <SeriesSection posts={sortedPosts} />
-      </section>
-    )
-  }
-  {
-    postsHaveTags && (
-      <section>
-        <BlockHeader>Tags</BlockHeader>
-        <TagsSection posts={sortedPosts} />
-      </section>
-    )
-  }
-  {
-    sortedPosts.length > 0 && (
-      <section>
-        <BlockHeader>Latest Posts</BlockHeader>
-        {sortedPosts
-          .reverse()
-          .slice(0, Math.floor(siteConfig.pageSize / 2))
-          .map((post) => (
-            <PostPreview post={post} />
-          ))}
-        <Pagination nextLink="/posts" nextText="Archive" />
-      </section>
-    )
-  }
+  {HomeContent && (
+    <HomeBanner avatarImage={homeAvatarImage} githubCalendar={homeGithubCalendar}>
+      <HomeContent />
+    </HomeBanner>
+  )}
+
+  {postsHaveSeries && (
+    <section>
+      <BlockHeader>Series</BlockHeader>
+      <SeriesSection posts={sortedPosts} />
+    </section>
+  )}
+
+  {postsHaveTags && (
+    <section>
+      <BlockHeader>Tags</BlockHeader>
+      <TagsSection posts={sortedPosts} />
+    </section>
+  )}
+
+  {sortedPosts.length > 0 && (
+    <section>
+      <BlockHeader>Latest Writeups</BlockHeader>
+      {sortedPosts
+        .slice(-Math.floor(siteConfig.pageSize / 2))
+        .reverse()
+        .map((post) => (
+          <PostPreview post={post} />
+        ))}
+      <Pagination nextLink="/posts" nextText="All Posts" />
+    </section>
+  )}
+
+  {sortedBlogs.length > 0 && (
+    <section>
+      <BlockHeader>Featured Blogs</BlockHeader>
+      {sortedBlogs
+        .slice(-Math.floor(siteConfig.pageSize / 2))
+        .reverse()
+        .map((blog) => (
+          <BlogPreview blog={blog} />
+        ))}
+      <Pagination nextLink="/blogs" nextText="All Blogs" />
+    </section>
+  )}
 </Layout>
 
 <style is:global>

@@ -41,6 +41,10 @@ const config: SiteConfig = {
       url: '/posts',
     },
     {
+      name: 'Blogs',
+      url: '/blogs',
+    },
+    {
       name: 'Tags',
       url: '/all-tags',
     },

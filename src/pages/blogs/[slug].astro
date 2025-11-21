@@ -1,0 +1,140 @@
+---
+import type { GetStaticPaths } from 'astro'
+import Layout from '~/layouts/Layout.astro'
+import { BlogSeriesGroup, BlogTagsGroup, getSortedBlogs, getBlogSequenceContext } from '~/utils'
+import BlogPreview from '~/components/BlogPreview.astro'
+import DividerText from '~/components/DividerText.astro'
+import { getCollection, render, type CollectionEntry } from 'astro:content'
+import PostAddendum from '~/components/PostAddendum.astro'
+import TableOfContents from '~/components/TableOfContents.astro'
+import { Image } from 'astro:assets'
+import GiscusLoader from '~/components/GiscusLoader.astro'
+import siteConfig from '~/site.config'
+import TagsBlogs from '~/components/TagsBlogs.astro'
+import BlogInfo from '~/components/BlogInfo.astro'
+import ScrollUpButton from '~/components/ScrollUpButton.astro'
+import type { Collation } from '~/types'
+import ChevronsRight from '~/icons/chevrons-right.svg'
+
+export const getStaticPaths = (async () => {
+  const blogs = await getSortedBlogs()
+  return blogs.map((blog) => {
+    const { prev, next } = getBlogSequenceContext(blog, blogs)
+    return {
+      params: { slug: blog.id },
+      props: { blog, prev, next },
+    }
+  })
+}) satisfies GetStaticPaths
+
+const { blog, prev, next } = Astro.props
+const blogData = blog.data
+const { headings, Content: BlogContent } = await render(blog)
+const addendum = await getCollection('addendum')
+let AddendumContent
+let addendumAvatarImage
+if (addendum.length > 0) {
+  const addendumEntry = addendum[0]
+  const { Content } = await render(addendumEntry)
+  AddendumContent = Content
+  addendumAvatarImage = addendumEntry.data.avatarImage
+}
+
+const sortedBlogs = await getSortedBlogs()
+
+// Series
+let series: Collation<'blogs'> | undefined
+let nextBlogInSeries: CollectionEntry<'blogs'> | undefined
+if (blogData.series) {
+  const seriesGroup = await BlogSeriesGroup.build(sortedBlogs)
+  series = seriesGroup.match(blogData.series)
+  if (!series) throw new Error(`Series "${blogData.series}" not found`)
+  const sequenceContext = getBlogSequenceContext(blog, series.entries)
+  nextBlogInSeries = sequenceContext.next
+}
+const showSeries = series && series.entries.length > 1
+
+let tags: Collation<'blogs'>[] | undefined
+if (blogData.tags && blogData.tags.length > 0) {
+  const tagsGroup = await BlogTagsGroup.build(sortedBlogs)
+  tags = tagsGroup.matchMany(blogData.tags)
+}
+---
+
+<Layout
+  title={blogData.title}
+  description={blogData.description}
+  author={blogData.author}
+  tags={blogData.tags}
+>
+  <article class="max-w-full py-7.5" data-pagefind-body>
+    {blogData.coverImage && (
+      <Image
+        priority
+        layout="constrained"
+        src={blogData.coverImage.src}
+        alt={blogData.coverImage.alt}
+        class="w-full rounded-xl mb-5"
+      />
+    )}
+    <div class="md:mx-2">
+      <h1 id={blog.id} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
+        # {blogData.title}
+      </h1>
+      <div class="my-2 border-l-2 border-accent/80 pl-4 py-2">
+        <BlogInfo blog={blog} class="mb-1" />
+        {tags && (
+          <div class="mt-4">
+            <TagsBlogs tags={tags} />
+          </div>
+        )}
+      </div>
+    </div>
+    <div class="flex flex-col xl:gap-1 2xl:gap-18 xl:flex-row xl:items-start">
+      {blogData.toc && headings.length > 0 && <TableOfContents headings={headings} />}
+      <div class="mb-5 xl:min-w-full 2xl:min-w-full prose">
+        <BlogContent />
+      </div>
+    </div>
+  </article>
+
+  {nextBlogInSeries && (
+    <a
+      href={`/blogs/${nextBlogInSeries.id}`}
+      class="button justify-center -mt-8 mb-8 !whitespace-normal text-center flex gap-2 sm:gap-3 items-center"
+    >
+      <span>Next: {nextBlogInSeries.data.title}</span>
+      <ChevronsRight class="size-5 hidden sm:block" />
+    </a>
+  )}
+
+  {AddendumContent && (
+    <PostAddendum avatarImage={addendumAvatarImage}>
+      <AddendumContent />
+    </PostAddendum>
+  )}
+
+  {showSeries && series ? (
+    <section>
+      <DividerText text={`${series.title} Series`} />
+      {series.entries.map((seriesBlog) => (
+        <BlogPreview blog={seriesBlog} />
+      ))}
+    </section>
+  ) : prev || next ? (
+    <section>
+      <DividerText text="More Blogs" />
+      {prev && <BlogPreview blog={prev} />}
+      {next && <BlogPreview blog={next} />}
+    </section>
+  ) : null}
+
+  {siteConfig.giscus && (
+    <section>
+      <DividerText text="Comments" />
+      <GiscusLoader />
+    </section>
+  )}
+
+  <ScrollUpButton />
+</Layout>

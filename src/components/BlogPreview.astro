@@ -1,0 +1,46 @@
+---
+import IconChevronsRight from '~/icons/chevrons-right.svg'
+import type { CollectionEntry } from 'astro:content'
+import { render } from 'astro:content'
+import TagsBlogs from '~/components/TagsBlogs.astro'
+import BlogInfo from '~/components/BlogInfo.astro'
+import type { Collation } from '~/types'
+import { BlogTagsGroup } from '~/utils'
+
+interface Props {
+  blog: CollectionEntry<'blogs'>
+}
+
+const { blog } = Astro.props
+
+const { remarkPluginFrontmatter } = await render(blog)
+const description = remarkPluginFrontmatter.description || blog.data.description
+let tags: Collation<'blogs'>[] | undefined
+if (blog.data.tags && blog.data.tags.length > 0) {
+  const tagsGroup = await BlogTagsGroup.build()
+  tags = tagsGroup.matchMany(blog.data.tags)
+}
+const samePage = Astro.url.pathname === `/blogs/${blog.id}`
+const articleLink = samePage ? `#${blog.id}` : `/blogs/${blog.id}`
+---
+
+<article class="w-full py-5 my-1 md:my-4 border-accent/10">
+  <h1 class="mb-3 text-2xl text-heading1 font-semibold">
+    <a href={articleLink}># {blog.data.title}</a>
+  </h1>
+  <BlogInfo blog={blog} class="mb-3 mt-4" />
+  {description && <p class="pl-0.5 my-4 text-base/7 text-foreground">{description}</p>}
+  {
+    tags && (
+      <div class="mb-6">
+        <TagsBlogs tags={tags} />
+      </div>
+    )
+  }
+  <div>
+    <a class="button flex items-center !pl-3.5" href={articleLink}>
+      {samePage ? 'Continue' : 'Read'}
+      <IconChevronsRight class="size-5 ml-2" />
+    </a>
+  </div>
+</article>
