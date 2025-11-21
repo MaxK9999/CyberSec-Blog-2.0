@@ -1,6 +1,5 @@
 ---
 title: 'HTB-Imagery'
-description: 
 published: 2025-11-20
 draft: false
 toc: true
