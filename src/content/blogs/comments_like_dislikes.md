@@ -4,6 +4,7 @@ published: 2025-10-19
 description: Unauthenticated manipulation of the like & dislike counter in the "Comments Like Dislike" WordPress plugin
 toc: true
 draft: false
+tags: ["WordPress", "Plugin"]
 ---
 
 ```
