@@ -6,7 +6,6 @@ toc: true
 tags: ["FTP"]
 ---
 
----
 ```
 Scope:
 10.10.11.79

@@ -1,6 +1,6 @@
 ---
 title: Tips for passing the OSCP exam
-published: 2025-11-21
+published: 2025-06-10
 draft: false
 toc: true
 tags: ["OSCP", "OffSec", "Cyber", "pentesting"]
