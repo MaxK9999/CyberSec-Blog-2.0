@@ -20,6 +20,7 @@ Despite there not being any public CVE's for this exact version of the plugin, o
 
 ![](attachments_cld_1.2.4/49df5b597d0fd9690e441e33aaa570bf.png)
 :::
+
 # Vendor Information
 
 **Affected Plugins**:
