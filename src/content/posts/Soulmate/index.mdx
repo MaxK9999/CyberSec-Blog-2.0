@@ -6,6 +6,8 @@ toc: true
 tags: ["erlang", "CrushFTP", "CVE-2025-31161"]
 ---
 
+import PasswordProtect from "~/components/PasswordProtect.client";
+
 ```
 Scope:
 10.10.11.86
@@ -29,6 +31,7 @@ PORT      STATE    SERVICE              REASON      VERSION
 |     PHPSESSID: 
 |_      httponly flag not set
 ```
+<PasswordProtect client:load>
 
 ## 80/TCP - HTTP
 
@@ -216,5 +219,7 @@ Thus I gave myself a *root* reverse shell:
 ![](attachments/78a9db99e809fff3b3380796601e39b6.png)
 
 ![](attachments/689ccfdc3daf3b5ae3d2db3b4221ffeb.png)
+
+</PasswordProtect>
 
 ---
