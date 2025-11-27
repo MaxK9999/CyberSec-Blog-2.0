@@ -3,7 +3,9 @@ title: PG-DVR4
 published: 2025-02-24
 toc: true
 draft: false
-tags:
+tags: 
+    - "OSCP Prep"
+    - "LFI"
 ---
 
 ```
