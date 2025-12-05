@@ -4,7 +4,7 @@ description: In Dumbledore's absence, Harry's memory fades, leaving crucial word
 published: 2025-11-29
 toc: true
 draft: false
-tags: "Web"
+tags: ["Web"]
 ---
 
 ```
