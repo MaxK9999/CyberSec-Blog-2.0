@@ -1,0 +1,166 @@
+---
+title: PG-Extplorer
+published: 2025-05-07
+toc: true
+draft: false
+tags: ["OSCP Prep"]
+---
+
+```
+Scope:
+192.168.184.16
+```
+
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV extplorer -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 80/TCP - HTTP
+
+I head on over and get routed to the following URL right away.
+
+![](attachments/d9bd959141c80aa6c7a2810222071a16.png)
+
+![](attachments/e1268744c9f902d8b02ff0dc16d1bd97.png)
+
+Not too sure whether this is supposed to be exposed...or whether we can exploit it ðŸ¤”
+
+I looked it up and found a juicy [Bug Bounty WriteUp](https://medium.com/@srilakivarma/%EF%B8%8F-%EF%B8%8F-how-i-hacked-a-wordpress-setup-and-gain-admin-privilege-and-got-paid-for-it-98a49433519f) about this exact topic, let's see if we can follow along:
+
+![](attachments/ea7a396468da12d1f87ed7931167269a.png)
+
+This walkthrough was a bust as I was not able to create a `sql` account on the linked website, neither did simple testing pass this page:
+
+![](attachments/d1f532e692b42cba0baaf399aece54be.png)
+
+![](attachments/b1b50963d82825b8e658f7bd4ee91c94.png)
+
+So instead I launched `feroxbuster` and started enumerating.
+
+### Feroxbuster
+
+![](attachments/ee913679c3b925b982034aaf55fb3e25.png)
+
+I tried out this endpoint instead:
+
+![](attachments/800b628422a24fe10ecd7c33e934fe6e.png)
+
+Cool we get a login page!
+
+![](attachments/a7d40d365e7826dc079983d0da9ac4ac.png)
+
+Nice, simple `admin - admin`, let's try it out.
+
+![](attachments/cdc880f89c66fff9b1b736addee92d70.png)
+
+We get in and I notice 2 users:
+
+![](attachments/10d2e89c45fe4c14215e2ecf203f0119.png)
+
+I went ahead and changed *dora* to **Admin** status as well, who knows if anything good will come from it.
+
+Let's try to find some sort of exploit:
+
+![](attachments/4ae4704c386500dcb1a0459e95e7fcf8.png)
+
+I was able to upload a webshell 
+
+![](attachments/6773c5448f5cdd8ef8fd1154261f7894.png)
+
+![](attachments/e47c747512f697316143ba53dc979097.png)
+
+EZ PZ
+
+# Foothold
+## Shell as www-data
+
+From here I just had to send myself a reverse shell:
+
+![](attachments/3e0c1d52a0f043a49688200b7a97d822.png)
+
+![](attachments/8f61df6353442efb92557b3d51a9935f.png)
+
+I used the `upload` feature on penelope to upload `linpeas.sh` and other stuff to enhance my exploitation:
+
+![](attachments/b9baea2df60b0b4b3847a923c5038368.png)
+
+I found that *dora* is part of the **disk** group.
+
+![](attachments/a7cafe47353115bd4444d05c5c098d52.png)
+
+This file looks rather interesting?
+
+I went on and viewed it via the website just because I still had access:
+
+![](attachments/2b270c9943dea7e3abaef197d908bac3.png)
+
+Turns out there's a hash hidden in here.
+
+## Hash cracking time
+
+![](attachments/142de4d225e96e809d3d90bb69c70719.png)
+
+Let's crack this shit:
+
+![](attachments/638e7c809d08447ced4aa091d126454a.png)
+
+EZ PZ
+
+## Shell as dora
+
+![](attachments/0fadfbef35702c98d6e4cc2fa6fa2a60.png)
+
+### local.txt
+
+![](attachments/8442960f7d97db72c6f846f0122e0178.png)
+
+# Privilege Escalation
+## Exploiting disk group privs
+
+From my enum I had already found that *dora* is part of the **disk** group, let's find out how we can exploit this.
+
+I found a handy [guide for this](https://www.hackingarticles.in/disk-group-privilege-escalation/):
+
+![](attachments/8af1d7b0850e840da344ee7e0c9b23bf.png)
+
+### proof.txt
+
+Following this principle I got `proof.txt` super easily:
+
+![](attachments/3d2b4f7094009363c8df297d2da03da7.png)
+
+But seeing as we actually need *root* access to pass the exam we will have to escalate privileges somehow.
+
+## Post-Exploitation
+
+The actual intended route to getting *root* is as follows:
+
+![](attachments/945b01c9384666bf66ccf0cf5ac3d4a0.png)
+
+We get the *root* hash, time to crack it and escalate privs.
+
+![](attachments/83f17d79d0c457401312633758315553.png)
+
+![](attachments/f8c3ca58403f200e18f60cf6dc87fa26.png)
+
+---
+
+**Finished 21:15 07-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#Wordpress 
+
+
