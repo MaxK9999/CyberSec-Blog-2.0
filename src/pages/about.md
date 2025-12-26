@@ -4,7 +4,7 @@ title: About Me
 ---
 
 My name is Maxim Koltypin, I'm 26 years old and work in Technical Exploitation. My passion is cybersecurity, specifically Red Teaming.
-I have 2+ years of experience with offensive security (hacking) and have rooted over 160 CTF's across platforms such as HackTheBox, OffSec Proving Grounds and TryHackMe ⛳.
+I have 2+ years of experience with offensive security (hacking) and have rooted over 170 CTF's across platforms such as HackTheBox, OffSec Proving Grounds and TryHackMe ⛳.
 
 
 ## Certifications
@@ -18,9 +18,13 @@ I have 2+ years of experience with offensive security (hacking) and have rooted 
 - CS50x - Introduction to Computer Science [(CS50X)](/assets/CS50x%20Certificate.png)
 
 ## Work Experience
-**Technical Exploitation Operator - Military Intelligence** <br></br> *Sep 2023 - Present*
 
-**Royal Netherlands Marine Corps** <br></br> *Aug 2018 - Present*
+| Position    | Employer | Timeframe |
+| -------- | ------- | ------- | 
+| Cyber Security Consultant       | LBVD                | Jan 2026 - Present     | 
+| Technical Exploitation Operator | Joint ISTAR Command | Sep 2023 - Dec 2025    |
+| Marine 1st class | Royal Netherlands Marine Corps | Aug 2018 - Dec 2025     |
+
 
 ### Skillset
 - Penetration Testing
