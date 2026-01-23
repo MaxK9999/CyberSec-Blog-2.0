@@ -21,9 +21,9 @@ I have 2+ years of experience with offensive security (hacking) and have rooted 
 
 | Position    | Employer | Timeframe |
 | -------- | ------- | ------- | 
-| Cyber Security Consultant       | LBVD                | Jan 2026 - Present     | 
-| Technical Exploitation Operator | Joint ISTAR Command | Sep 2023 - Dec 2025    |
-| Marine 1st class | Royal Netherlands Marine Corps | Aug 2018 - Dec 2025     |
+| Cyber Security Consultant/Pentester       | LBVD                | Jan 2026 - Present     | 
+| Technical Exploitation Operator | Joint ISTAR Command, Ministry of Defence | Sep 2023 - Dec 2025    |
+| Marine 1st class, OR-4 | Royal Netherlands Marine Corps, Ministry of Defence | Aug 2018 - Dec 2025     |
 
 
 ### Skillset
