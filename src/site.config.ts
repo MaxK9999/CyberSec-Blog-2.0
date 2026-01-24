@@ -48,6 +48,10 @@ const config: SiteConfig = {
       name: 'Tags',
       url: '/all-tags',
     },
+    {
+      name: 'Cheat Sheets',
+      url: 'https://maxk9999.gitbook.io/cs/',
+    }
   ],
   // The theming configuration for the site.
   themes: {

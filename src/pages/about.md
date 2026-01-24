@@ -10,6 +10,8 @@ I have 2+ years of experience with offensive security (hacking) and have rooted 
 
 ## Certifications
 
+My certifications in chronological order:
+
 - Certified Web Exploitation Specialist [(CWES)](https://www.credly.com/badges/cc5d0769-7fa4-4468-8b5c-35001c8ee0d8/public_url)
 - Certified Penetration Testing Specialist [(CPTS)](https://www.credly.com/badges/f36abe8a-2f3b-4b2b-b4cb-fe88c64def53/public_url)
 - Offensive Security Wireless Proffesional [(OSWP)](https://credentials.offsec.com/775cbbc7-11af-4b5a-9f7c-bd7d1f8c3634#acc.knR39fPe)
