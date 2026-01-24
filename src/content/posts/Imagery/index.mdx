@@ -7,8 +7,6 @@ tags: ["XSS", "LFI", "command-injection", "pyAesCrypt", "SUID", "cron"]
 protected: true
 ---
 
-import PasswordProtect from "~/components/PasswordProtect.client";
-
 ```
 Scope:
 10.10.11.88
@@ -36,8 +34,6 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 We notice 2 `python` webservers running as well as a `ssh` port.
-
-<PasswordProtect client:load>
 
 I quickly check out both to see the difference:
 
@@ -441,4 +437,3 @@ After waiting for a short while:
 
 ---
 
-</PasswordProtect>
