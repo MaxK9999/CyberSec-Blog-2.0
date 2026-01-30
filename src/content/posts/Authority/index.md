@@ -8,6 +8,7 @@ tags:
   - ESC1
   - ansible-vault
   - smbclientng
+  - certipy-ad
 ---
 
 ```

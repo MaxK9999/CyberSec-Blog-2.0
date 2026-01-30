@@ -8,6 +8,7 @@ tags:
   - ESC14
   - BloodyAD
   - BloodHound
+  - certipy-ad
   - nfs
   - forcechangepassword
   - GenericAll
