@@ -1,6 +1,6 @@
 ---
 title: HTB-Vintage
-published:
+published: 2026-01-31
 toc: true
 draft: false
 tags:
