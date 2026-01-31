@@ -6,9 +6,6 @@ toc: true
 tags: ["mssql"]
 ---
 
-import PasswordProtect from "~/components/PasswordProtect.client";
-
-
 ```
 Scope:
 10.10.11.90
@@ -51,7 +48,6 @@ Host script results:
 |_clock-skew: mean: 0s, deviation: 0s, median: 0s
 ```
 
-<PasswordProtect client:load>
 
 ## 1433/TCP - MSSQL
 
@@ -314,10 +310,11 @@ EXECUTE xp_cmdshell '<cmd>'
 # Privilege Escalation
 ## File Read - UNINTENDED way
 
->[!warning]
->While this is the UNINTENDED way according to the box creator, this still works and also shows that the target is vulnerable to this attack:
->
->![](attachments/cc5762350734925e6bedb681520c1212.png)
+:::warning
+While this is the UNINTENDED way according to the box creator, this still works and also shows that the target is vulnerable to this attack:
+
+![](attachments/cc5762350734925e6bedb681520c1212.png)
+:::
 
 We find the user SID
 
@@ -342,5 +339,3 @@ While this didn't work, the following did:
 ![](attachments/6f081466f4897451d889ddca9cdd4bc9.png)
 
 ---
-
-</PasswordProtect>
