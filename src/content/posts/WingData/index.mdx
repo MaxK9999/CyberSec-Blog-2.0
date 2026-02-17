@@ -1,0 +1,178 @@
+---
+title: HTB-WingData
+published: 2026-02-17
+toc: true
+draft: false
+tags:
+  - CVE-2025-4138
+  - CVE-2025-47812
+  - WingFTP
+---
+
+import PasswordProtect from '~/components/PasswordProtect.client';
+
+```
+Scope:
+10.129.15.56
+```
+
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -Pn -T5 --min-rate=5000 -vvvv wingdata.htb
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 9.2p1 Debian 2+deb12u7 (protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.66
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+|_http-title: WingData Solutions
+|_http-server-header: Apache/2.4.66 (Debian)
+Service Info: Host: localhost; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+<PasswordProtect client:load>
+
+## 80/TCP - HTTP
+
+![](attachments/a0c1bf0d009f558ecdd65cb4e46f9ae4.png)
+
+Heading over to the **Client Portal** tab we get redirected to another vhost which we need to add in order to access it.
+
+Once added we can access it as follows:
+
+![](attachments/017a8992128ad5762e74f44311ce7632.png)
+
+I notice the software version and look it up.
+
+# Exploitation
+## CVE-2025-47812
+
+There appears to be a **Unauthenticated RCE** exploit available:
+
+![](attachments/e2bffb05d6790baa4e004c8b80fdd7b9.png)
+
+![](attachments/21ed5cddde5603731b0dd4ccaa136dce.png)
+
+I download the PoC and attempt to run it:
+
+![](attachments/eadd3f90aa9d4ae77b3f799586c30919.png)
+
+![](attachments/2d0449c9fa31c67e14a2cb1ca9c9803d.png)
+
+It appears to work flawlessly, let's get a reverse shell set up.
+
+## Shell as wingftp
+
+![](attachments/326e49ab3fe62607c214eaa81d88990e.png)
+
+![](attachments/613e9164cc00cccd1c39a399a9686697.png)
+
+I notice one other user to whom we need to move laterally:
+
+![](attachments/d39886ae4680339eb97d462f0b6f97c5.png)
+
+### Enumeration
+
+While enumerating the directory we landed in we find the following:
+
+![](attachments/4a975c6a50fe3a43169401072296fc81.png)
+
+among these files the `audit_db` sounds interesting so I download it over:
+
+![](attachments/9ad7bf6398b60c75201383c26bd6b689.png)
+
+However nothing of use is found inside:
+
+![](attachments/d23ec081ec02e9815b0ad4b8f978c6c3.png)
+
+However looking further I did find a password for the server:
+
+![](attachments/97cece135874b752e0f26e00656f2976.png)
+
+I was unable to crack the above hash however, so instead looked further:
+
+![](attachments/1ec46985deb516cd29962e71818c2989.png)
+
+This one was yet again uncrackable, but then I finally stumbled upon something
+
+![](attachments/00b4e39993c57710aa2a5777e350566a.png)
+
+Inside this folder was the `wacky.xml` file, and this is a valid user on the `ssh` server.
+
+![](attachments/55c50178e42bb1e5f5278bbf59551cfe.png)
+
+Now all that's left is to crack the hash.
+
+![](attachments/408e5c9d32e690201d4d20bc90c7c268.png)
+
+![](attachments/78e778c078663f500ab2f582ec9c7f28.png)
+
+### hashcat
+
+I noticed that I had to use `WingFTP` as the salt so I appended it to my hash, then used `hashcat` to crack it: 
+
+![](attachments/fbc486f5c84e6cf2d5837df3c990a29c.png)
+
+![](attachments/cef6af7189921c298308d3186d1563ad.png)
+
+![](attachments/dfcf078c56c4abae8d6729581dbb2518.png)
+
+```
+wacky
+!#7Blushing^*Bride5
+```
+
+## Lateral Movement to Wacky
+
+Using the cracked password we can log into the target:
+
+![](attachments/1877d91ab4f174d5e6751a391ac2a294.png)
+
+### user.txt
+
+![](attachments/6acc7d9a7388b8ae5ebf60ca7899f810.png)
+
+# Privilege Escalation
+## CVE-2025-4138
+
+Using `sudo -l` I noticed the following:
+
+![](attachments/1fddc1f31e8d3cbf18e43e9b90655f34.png)
+
+By analyzing the `python` file I found the following:
+
+![](attachments/766d15e004a97dfb3ef2d5c77079b2fe.png)
+
+This can be exploited using **CVE-2025-4138** for which there are plenty of PoC's, but I'll be using this one:
+
+https://github.com//thefizzyfish//CVE-2025-4138_tarfile_filter_bypass
+
+![](attachments/588de58ea9f0cf48c51e1df30ed62fd2.png)
+
+First I created a `ssh` key which I would transfer to the target in order to put it inside the `/root/.ssh` directory.
+
+![](attachments/a0446cafec13ebe95e7dffdfffa724d0.png)
+
+After creating and transferring the `ssh` key I went to work with the PoC:
+
+![](attachments/ca7195b2fb786722ff330da5d0398515.png)
+
+I then transfer the backup to the correct folder:
+
+![](attachments/0e43fb4b8e0ae00ce8a20676d683d9c8.png)
+
+Once the above is done I can connect using my `id_rsa` key:
+
+![](attachments/df79bd7b7d528807db09842b345e442e.png)
+
+### root.txt
+
+![](attachments/d896ba1038c0c513aca337e017d67be0.png)
+
+![](attachments/4c0ce50f3d5c20aa45fadcb977ab9b37.png)
+
+</PasswordProtect>
+
+---
